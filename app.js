@@ -8,8 +8,20 @@ const dbConnect = require("./config/dbConnect.js");
 const app = express();
 app.use(express.json());
 
+const allowedOrigins = [
+  'https://jacksonmagnabosco.dev',
+  'https://death-star.onrender.com',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: 'https://jacksonmagnabosco.dev/millennium-falcon',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS não permitido para esta origem.'));
+    }
+  },
 }));
 
 const port = process.env.PORT || 8000;
