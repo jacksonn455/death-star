@@ -209,9 +209,9 @@ async function deleteEventFromGoogleCalendar(eventId) {
 
 async function deletePlannerService(id) {
   try {
-    const planner = await Planner.findOne({ eventId: id });
+    const planner = await Planner.findById(id); // Usa o _id do MongoDB
     if (!planner) {
-      console.error(`Agendamento com ID de evento ${id} não encontrado no banco de dados.`);
+      console.error(`Agendamento com ID ${id} não encontrado no banco de dados.`);
       throw new Error("Agendamento não encontrado.");
     }
 
