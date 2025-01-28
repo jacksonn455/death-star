@@ -77,6 +77,55 @@ async function addEventToGoogleCalendar(eventData) {
   }
 }
 
+async function getAllPlanners() {
+  try {
+    const planners = await Planner.find();
+    return planners;
+  } catch (error) {
+    throw new Error("Erro ao buscar todos os agendamentos.");
+  }
+}
+
+async function getPlannerByIdService(id) {
+  try {
+    const planner = await Planner.findById(id);
+    return planner;
+  } catch (error) {
+    throw new Error("Erro ao buscar agendamento por ID.");
+  }
+}
+
+async function createPlannerService(data) {
+  let newPlanner = null;
+  try {
+    newPlanner = await Planner.create(data);
+    return newPlanner;
+  } catch (error) {
+    throw new Error("Erro ao criar agendamento.");
+  }
+}
+
+async function updatePlannerService(id, data) {
+  try {
+    const updatedPlanner = await Planner.findByIdAndUpdate(id, data, { new: true });
+    return updatedPlanner;
+  } catch (error) {
+    throw new Error("Erro ao atualizar agendamento.");
+  }
+}
+
+async function deletePlannerService(id) {
+  try {
+    await Planner.findByIdAndDelete(id);
+  } catch (error) {
+    throw new Error("Erro ao excluir agendamento.");
+  }
+}
+
 module.exports = {
+  getAllPlanners,
+  getPlannerByIdService,
   createPlannerService,
+  updatePlannerService,
+  deletePlannerService,
 };
