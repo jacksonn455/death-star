@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js",
+    "dev": "nodemon app.js",
     "build": "echo 'No build script for now'"
   },
   "dependencies": {

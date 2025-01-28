@@ -12,16 +12,16 @@ app.use(cors({
   origin: 'https://jacksonmagnabosco.dev/millennium-falcon',
 }));
 
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 const startServer = async () => {
-  try {
-    const connection = await dbConnect();
-    connection.on("error", console.error.bind(console, "connection error:"));
-    connection.once("open", () => {
-      console.log("Conectado ao banco de dados");
-    });
+  if (!process.env.MONGO_URI) {
+    console.error("Erro: MONGO_URI não está configurado.");
+    process.exit(1);
+  }
 
+  try {
+    await dbConnect();
     app.use("/pacientes", rotaPacientes);
     app.use("/agenda", rotaAgendamento);
 
