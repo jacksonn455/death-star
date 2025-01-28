@@ -1,19 +1,22 @@
-const mongoose = require('mongoose');
-const { google } = require("googleapis");  
+const mongoose = require("mongoose");
+const { google } = require("googleapis");
 const Planner = require("../models/planner");
+const moment = require("moment");
+require('dotenv').config();
 
 async function createPlannerService(data) {
   let newPlanner = null;
   try {
-    await addEventToGoogleCalendar(data);
+    const eventId = await addEventToGoogleCalendar(data);
+    data.eventId = eventId;
     newPlanner = await Planner.create(data);
     const collections = await mongoose.connection.db.listCollections().toArray();
     const isCollectionCreated = collections.some(collection => collection.name === 'planners');
 
     if (isCollectionCreated) {
-      console.log("A coleção 'planners' foi criada com sucesso.");
+
     } else {
-      console.log("A coleção 'planners' não foi criada.");
+
     }
 
     return newPlanner;
@@ -34,20 +37,20 @@ async function addEventToGoogleCalendar(eventData) {
     },
     scopes: ['https://www.googleapis.com/auth/calendar'],
   });
-  
+
   const calendar = google.calendar({ version: "v3", auth });
   const calendarId = "naagibz@gmail.com";
 
   const startDateTime = `${eventData.date}T${eventData.time}:00-03:00`;
   const endHour = (parseInt(eventData.time.split(":")[0]) + 1) % 24;
-  const endDateTime = `${eventData.date}T${endHour.toString().padStart(2, "0")}:${eventData.time.split(":")[1]}:00-03:00`;
+  const endDateTime = `${eventData.date}T${endHour
+    .toString()
+    .padStart(2, "0")}:${eventData.time.split(":")[1]}:00-03:00`;
 
-  const description = `
-    Tipo de Serviço: ${eventData.service || "Não informado"}
+  const description = `Tipo de Serviço: ${eventData.service || "Não informado"}
     Telefone/Contato: ${eventData.contact || "Não informado"}
     Profissional Responsável: ${eventData.responsible || "Não informado"}
-    Observações: ${eventData.notes || "Sem observações."}
-  `;
+    Observações: ${eventData.notes || "Sem observações."}`;
 
   const event = {
     summary: `Consulta: ${eventData.paciente}`,
@@ -67,7 +70,7 @@ async function addEventToGoogleCalendar(eventData) {
       calendarId,
       resource: event,
     });
-    return eventResponse.data;
+    return eventResponse.data.id;  // Retorna o ID do evento
   } catch (error) {
     console.error("Erro ao criar evento:", error);
     if (error.response) {
@@ -79,10 +82,18 @@ async function addEventToGoogleCalendar(eventData) {
 
 async function getAllPlanners() {
   try {
-    const planners = await Planner.find();
+    const now = moment();
+    const today = now.format("YYYY-MM-DD");
+    const currentTime = now.format("HH:mm");
+
+    const planners = await Planner.find({
+      date: today,
+      time: { $gte: currentTime },
+    }).sort({ time: 1 });
+
     return planners;
   } catch (error) {
-    throw new Error("Erro ao buscar todos os agendamentos.");
+    throw new Error("Erro ao buscar agendamentos do dia.");
   }
 }
 
@@ -95,29 +106,125 @@ async function getPlannerByIdService(id) {
   }
 }
 
-async function createPlannerService(data) {
-  let newPlanner = null;
+async function updatePlannerService(id, data) {
   try {
-    newPlanner = await Planner.create(data);
-    return newPlanner;
+    const planner = await Planner.findById(id);
+    if (!planner) {
+      console.error(`Agendamento com ID ${id} não encontrado.`);
+      throw new Error("Agendamento não encontrado.");
+    }
+
+    if (!planner.eventId) {
+      console.error(`Evento do Google Calendar não encontrado para o agendamento ${id}.`);
+      throw new Error("Evento no Google Calendar não encontrado.");
+    }
+
+    await updateEventInGoogleCalendar(planner.eventId, data);
+
+    const updatedPlanner = await Planner.findByIdAndUpdate(id, data, {
+      new: true,
+    });
+    return updatedPlanner;
   } catch (error) {
-    throw new Error("Erro ao criar agendamento.");
+    console.error("Erro ao atualizar agendamento:", error);
+    throw new Error("Erro ao atualizar agendamento.");
   }
 }
 
-async function updatePlannerService(id, data) {
+async function updateEventInGoogleCalendar(eventId, updatedData) {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    },
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+  });
+
+  const calendar = google.calendar({ version: "v3", auth });
+  const calendarId = "naagibz@gmail.com";
+
+  const startDateTime = `${updatedData.date}T${updatedData.time}:00-03:00`;
+  const endHour = (parseInt(updatedData.time.split(":")[0]) + 1) % 24;
+  const endDateTime = `${updatedData.date}T${endHour
+    .toString()
+    .padStart(2, "0")}:${updatedData.time.split(":")[1]}:00-03:00`;
+
+  const description = `
+    Tipo de Serviço: ${updatedData.service || "Não informado"}
+    Telefone/Contato: ${updatedData.contact || "Não informado"}
+    Profissional Responsável: ${updatedData.responsible || "Não informado"}
+    Observações: ${updatedData.notes || "Sem observações."}
+  `;
+
+  const event = {
+    summary: `Consulta: ${updatedData.paciente}`,
+    description: description.trim(),
+    start: {
+      dateTime: startDateTime,
+      timeZone: "America/Sao_Paulo",
+    },
+    end: {
+      dateTime: endDateTime,
+      timeZone: "America/Sao_Paulo",
+    },
+  };
+
   try {
-    const updatedPlanner = await Planner.findByIdAndUpdate(id, data, { new: true });
-    return updatedPlanner;
+    await calendar.events.update({
+      calendarId,
+      eventId,
+      resource: event,
+    });
   } catch (error) {
-    throw new Error("Erro ao atualizar agendamento.");
+    console.error("Erro ao atualizar evento:", error);
+    throw new Error("Erro ao atualizar evento no Google Calendar.");
+  }
+}
+
+async function deleteEventFromGoogleCalendar(eventId) {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      private_key: process.env.GOOGLE_PRIVATE_KEY,
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    },
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+  });
+
+  const calendar = google.calendar({ version: "v3", auth });
+  const calendarId = "naagibz@gmail.com";
+
+  try {
+    await calendar.events.delete({
+      calendarId,
+      eventId,
+    });
+  } catch (error) {
+    console.error(`Erro ao excluir evento com ID ${eventId}:`, error);
+    if (error.response) {
+      console.error("Detalhes do erro:", error.response.data);
+    }
+    throw new Error("Erro ao excluir evento no Google Calendar.");
   }
 }
 
 async function deletePlannerService(id) {
   try {
-    await Planner.findByIdAndDelete(id);
+    const planner = await Planner.findOne({ eventId: id });
+    if (!planner) {
+      console.error(`Agendamento com ID de evento ${id} não encontrado no banco de dados.`);
+      throw new Error("Agendamento não encontrado.");
+    }
+
+    if (!planner.eventId) {
+      console.error(`Evento do Google Calendar não encontrado para o agendamento ${id}.`);
+      throw new Error("Evento no Google Calendar não encontrado.");
+    }
+
+    await deleteEventFromGoogleCalendar(planner.eventId);
+
+    await Planner.findByIdAndDelete(planner._id);
   } catch (error) {
+    console.error("Erro ao excluir agendamento:", error);
     throw new Error("Erro ao excluir agendamento.");
   }
 }
