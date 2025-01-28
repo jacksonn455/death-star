@@ -7,8 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "dev": "nodemon index.js",
+    "start": "node app.js",
+    "dev": "node app.js",
     "build": "echo 'No build script for now'"
   },
   "dependencies": {
@@ -20,5 +20,8 @@
     "mongodb": "^6.12.0",
     "mongoose": "^8.9.5",
     "nodemon": "^3.1.9"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
