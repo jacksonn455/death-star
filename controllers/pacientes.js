@@ -17,20 +17,13 @@ function getPacientes(req, res) {
   }
 }
 
-function getPaciente(req, res) {
-  try {
-    const id = req.params.id;
-    if (id && Number(id)) {
-      const pacientes = getPacientePorId(id);
-      res.send(pacientes);
-    } else {
-      res.status(422);
-      res.send("Id inválido");
+function getPacientes(req, res) {
+  db.query('SELECT * FROM pacientes', (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro no servidor' });
     }
-  } catch (error) {
-    res.status(500);
-    res.send(error.message);
-  }
+    return res.json(results);
+  });
 }
 
 function postPaciente(req, res) {
