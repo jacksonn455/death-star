@@ -70,7 +70,7 @@ async function addEventToGoogleCalendar(eventData) {
       calendarId,
       resource: event,
     });
-    return eventResponse.data.id;  // Retorna o ID do evento
+    return eventResponse.data.id;
   } catch (error) {
     console.error("Erro ao criar evento:", error);
     if (error.response) {
@@ -209,7 +209,7 @@ async function deleteEventFromGoogleCalendar(eventId) {
 
 async function deletePlannerService(id) {
   try {
-    const planner = await Planner.findById(id); // Usa o _id do MongoDB
+    const planner = await Planner.findById(id);
     if (!planner) {
       console.error(`Agendamento com ID ${id} não encontrado no banco de dados.`);
       throw new Error("Agendamento não encontrado.");
