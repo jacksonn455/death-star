@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require("express");
 const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
+const rotaAuth = require("./routes/auth");
 const cors = require("cors");
 const dbConnect = require("./config/dbConnect.js");
+const { authMiddleware } = require("./middlewares/auth");
 
 const app = express();
 app.use(express.json());
@@ -34,8 +36,9 @@ const startServer = async () => {
 
   try {
     await dbConnect();
-    app.use("/pacientes", rotaPacientes);
-    app.use("/agenda", rotaAgendamento);
+    app.use("/pacientes", authMiddleware, rotaPacientes); 
+    app.use("/agenda", authMiddleware, rotaAgendamento);
+    app.use("/auth", rotaAuth);
 
     app.listen(port, () => {
       console.log(`Servidor ouvindo na porta ${port}`);
