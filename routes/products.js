@@ -12,13 +12,9 @@ const { body, param, validationResult } = require("express-validator");
 
 const validateProductData = [
   body("name").isString().notEmpty().withMessage("Nome do produto é obrigatório"),
-  body("category").optional().isString().withMessage("Categoria inválida"),
   body("quantity").isInt({ min: 0 }).withMessage("Quantidade deve ser um número inteiro positivo"),
   body("price").isFloat({ min: 0 }).withMessage("Preço deve ser um número positivo"),
-  body("supplier").optional().isString().withMessage("Fornecedor deve ser uma string"),
   body("validity").optional().isDate().withMessage("Validade deve ser uma data válida"),
-  body("composition").optional().isString().withMessage("Composição deve ser uma string"),
-  body("image").optional().isURL().withMessage("Imagem deve ser uma URL válida")
 ];
 
 const validateId = [param("id").isMongoId().withMessage("ID inválido")];
