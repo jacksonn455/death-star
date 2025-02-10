@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require("express");
 const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
+const rotaProdutos = require("./routes/products");
 const rotaAuth = require("./routes/auth");
 const cors = require("cors");
 const dbConnect = require("./config/dbConnect.js");
@@ -38,6 +39,7 @@ const startServer = async () => {
     await dbConnect();
     app.use("/pacientes", authMiddleware, rotaPacientes); 
     app.use("/agenda", authMiddleware, rotaAgendamento);
+    app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
 
     app.listen(port, () => {
