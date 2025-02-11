@@ -41,11 +41,9 @@ async function addEventToGoogleCalendar(eventData) {
   const calendar = google.calendar({ version: "v3", auth });
   const calendarId = "naagibz@gmail.com";
 
-  const startDateTime = `${eventData.date}T${eventData.time}:00-03:00`;
-  const endHour = (parseInt(eventData.time.split(":")[0]) + 1) % 24;
-  const endDateTime = `${eventData.date}T${endHour
-    .toString()
-    .padStart(2, "0")}:${eventData.time.split(":")[1]}:00-03:00`;
+  const startDateTime = moment(`${eventData.date} ${eventData.time}`, "YYYY-MM-DD HH:mm")
+    .toISOString();
+  const endDateTime = moment(startDateTime).add(1, 'hour').toISOString();
 
   const description = `Tipo de Serviço: ${eventData.service || "Não informado"}
     Telefone/Contato: ${eventData.contact || "Não informado"}
@@ -96,7 +94,9 @@ async function getAllPlanners(query) {
       return await Planner.find(filters).sort({ time: 1 });
     }
 
-    if (!query.paciente) {
+    if (query.date) {
+      filters.date = moment(query.date, "YYYY-MM-DD").format("YYYY-MM-DD");
+    } else {
       filters.date = today;
       filters.time = { $gte: currentTime };
     }
@@ -104,6 +104,7 @@ async function getAllPlanners(query) {
     const planners = await Planner.find(filters).sort({ time: 1 });
     return planners;
   } catch (error) {
+    console.error("Erro ao buscar agendamentos:", error);
     throw new Error("Erro ao buscar agendamentos.");
   }
 }
