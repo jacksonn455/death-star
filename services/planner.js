@@ -41,9 +41,11 @@ async function addEventToGoogleCalendar(eventData) {
   const calendar = google.calendar({ version: "v3", auth });
   const calendarId = "naagibz@gmail.com";
 
-  const startDateTime = moment(`${eventData.date} ${eventData.time}`, "YYYY-MM-DD HH:mm")
-    .toISOString();
-  const endDateTime = moment(startDateTime).add(1, 'hour').toISOString();
+  const startDateTime = `${eventData.date}T${eventData.time}:00-03:00`;
+  const endHour = (parseInt(eventData.time.split(":")[0]) + 1) % 24;
+  const endDateTime = `${eventData.date}T${endHour
+    .toString()
+    .padStart(2, "0")}:${eventData.time.split(":")[1]}:00-03:00`;
 
   const description = `Tipo de Serviço: ${eventData.service || "Não informado"}
     Telefone/Contato: ${eventData.contact || "Não informado"}
