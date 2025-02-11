@@ -1,5 +1,4 @@
 const Product = require("../models/products");
-const moment = require("moment");
 
 async function getAllProducts(query) {
   try {
