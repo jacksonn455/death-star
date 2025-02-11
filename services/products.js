@@ -28,6 +28,8 @@ async function getProductByIdService(id) {
 // Função para fazer o upload da imagem
 const uploadImageToCloudinary = async (imageFile) => {
   console.log("Tipo de imagem recebido:", imageFile.mimetype);
+  console.log("Tamanho da imagem recebido:", imageFile.size);
+  console.log("Conteúdo do buffer da imagem:", imageFile.buffer);
 
   const validTypes = ["image/jpeg", "image/png", "image/jpg"];
   if (!validTypes.includes(imageFile.mimetype)) {
@@ -40,17 +42,22 @@ const uploadImageToCloudinary = async (imageFile) => {
 
   try {
     const uploadResult = await new Promise((resolve, reject) => {
+      console.log("Iniciando upload para o Cloudinary...");
+      console.log("Imagem em formato Base64:", "data:image/png;base64," + imageFile.buffer.toString("base64"));
+      
       cloudinary.uploader.upload(
-        "data:image/png;base64," + req.file.buffer.toString("base64"),
+        "data:image/png;base64," + imageFile.buffer.toString("base64"),
         { folder: "products" },
         (error, result) => {
           if (error) {
+            console.error("Erro ao fazer upload da imagem no Cloudinary:", error);
             reject(error);
           }
+          console.log("Resultado do upload:", result);
           resolve(result);
         }
       );
-    });    
+    });
 
     if (uploadResult.secure_url) {
       return uploadResult.secure_url;
