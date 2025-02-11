@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+const cloudinary = require("C:/projetos/death-star/config/cloudinary.js");
 const {
   getAllProducts,
   getProductByIdService,
@@ -7,21 +9,16 @@ const {
   deleteProductService,
 } = require("../services/products");
 const moment = require("moment");
-
-const router = express.Router();
 const { body, param, validationResult } = require("express-validator");
 
+const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 const validateProductData = [
-  body("name")
-    .isString()
-    .notEmpty()
-    .withMessage("Nome do produto é obrigatório"),
-  body("quantity")
-    .isInt({ min: 0 })
-    .withMessage("Quantidade deve ser um número inteiro positivo"),
-  body("price")
-    .isFloat({ min: 0 })
-    .withMessage("Preço deve ser um número positivo"),
+  body("name").isString().notEmpty().withMessage("Nome do produto é obrigatório"),
+  body("quantity").isInt({ min: 0 }).withMessage("Quantidade deve ser um número inteiro positivo"),
+  body("price").isFloat({ min: 0 }).withMessage("Preço deve ser um número positivo"),
   body("validity")
     .optional()
     .custom((value) => {
@@ -49,39 +46,55 @@ router.get("/:id", validateId, async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
   try {
     const product = await getProductByIdService(req.params.id);
-    if (!product)
-      return res.status(404).json({ error: "Produto não encontrado." });
+    if (!product) return res.status(404).json({ error: "Produto não encontrado." });
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post("/", validateProductData, async (req, res) => {
+router.post("/", upload.single("image"), validateProductData, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
   try {
-    const newProduct = await createProductService(req.body);
+    let imageUrl = null;
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
+          if (error) reject(error);
+          resolve(result);
+        }).end(req.file.buffer);
+      });
+      imageUrl = uploadResult.secure_url;
+    }
+    const newProduct = await createProductService({ ...req.body, image: imageUrl });
     res.status(201).json(newProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.put("/:id", [validateId, validateProductData], async (req, res) => {
+router.put("/:id", upload.single("image"), [validateId, validateProductData], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
   try {
-    const updatedProduct = await updateProductService(req.params.id, req.body);
+    let imageUrl = req.body.image;
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
+          if (error) reject(error);
+          resolve(result);
+        }).end(req.file.buffer);
+      });
+      imageUrl = uploadResult.secure_url;
+    }
+    const updatedProduct = await updateProductService(req.params.id, { ...req.body, image: imageUrl });
     res.json(updatedProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
