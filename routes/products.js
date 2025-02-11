@@ -11,10 +11,24 @@ const router = express.Router();
 const { body, param, validationResult } = require("express-validator");
 
 const validateProductData = [
-  body("name").isString().notEmpty().withMessage("Nome do produto é obrigatório"),
-  body("quantity").isInt({ min: 0 }).withMessage("Quantidade deve ser um número inteiro positivo"),
-  body("price").isFloat({ min: 0 }).withMessage("Preço deve ser um número positivo"),
-  body("validity").optional().isDate().withMessage("Validade deve ser uma data válida"),
+  body("name")
+    .isString()
+    .notEmpty()
+    .withMessage("Nome do produto é obrigatório"),
+  body("quantity")
+    .isInt({ min: 0 })
+    .withMessage("Quantidade deve ser um número inteiro positivo"),
+  body("price")
+    .isFloat({ min: 0 })
+    .withMessage("Preço deve ser um número positivo"),
+  body("validity")
+    .optional()
+    .custom((value) => {
+      if (!moment(value, moment.ISO_8601, true).isValid()) {
+        throw new Error("Validade deve ser uma data válida");
+      }
+      return true;
+    }),
 ];
 
 const validateId = [param("id").isMongoId().withMessage("ID inválido")];
@@ -37,7 +51,8 @@ router.get("/:id", validateId, async (req, res) => {
 
   try {
     const product = await getProductByIdService(req.params.id);
-    if (!product) return res.status(404).json({ error: "Produto não encontrado." });
+    if (!product)
+      return res.status(404).json({ error: "Produto não encontrado." });
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -6,7 +6,7 @@ async function getAllProducts(query) {
     const filters = {};
 
     if (query && query.name) {
-      filters.name = { $regex: query.name, $options: 'i' };
+      filters.name = { $regex: query.name, $options: "i" };
     }
 
     if (query && query.validity) {
@@ -31,6 +31,9 @@ async function createProductService(productData) {
 }
 
 async function updateProductService(id, updatedData) {
+  if (updatedData.validity) {
+    updatedData.validity = new Date(updatedData.validity);
+  }
   return await Product.findByIdAndUpdate(id, updatedData, { new: true });
 }
 
