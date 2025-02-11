@@ -34,7 +34,7 @@ const {
     try {
       const productData = req.body;
       const requiredFields = ["name", "category", "quantity", "price", "supplier"];
-    
+  
       for (const field of requiredFields) {
         if (!productData[field]) {
           return res.status(400).send(`O campo "${field}" é obrigatório.`);
@@ -44,6 +44,12 @@ const {
       let image = null;
       if (req.file) {
         console.log("Imagem recebida na requisição POST:", req.file);
+  
+        const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
+        if (!allowedFileTypes.includes(req.file.mimetype)) {
+          return res.status(400).send("Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos.");
+        }
+  
         const uploadResult = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
             if (error) {
@@ -53,6 +59,7 @@ const {
             resolve(result);
           }).end(req.file.buffer);
         });
+  
         image = uploadResult.secure_url;
         console.log("URL da imagem no Cloudinary após upload:", image);
       }
