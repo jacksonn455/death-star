@@ -40,7 +40,7 @@ const uploadImageToCloudinary = async (imageFile) => {
 
   try {
     const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
+      const stream = cloudinary.uploader.upload_stream(
         { folder: "products" },
         (error, result) => {
           if (error) {
@@ -48,7 +48,9 @@ const uploadImageToCloudinary = async (imageFile) => {
           }
           resolve(result);
         }
-      ).end(req.file.buffer);
+      );
+    
+      stream.end(req.file.buffer);
     });    
 
     if (uploadResult.secure_url) {
