@@ -25,10 +25,14 @@ async function getProductByIdService(id) {
   return await Product.findById(id);
 }
 
-async function uploadImageToCloudinary(imageUrl, publicId) {
+async function uploadImageToCloudinary(imageFile) {
   try {
-    const uploadResult = await cloudinary.uploader.upload(imageUrl, {
-      public_id: publicId,
+    if (!imageFile || !imageFile.path) {
+      throw new Error("Arquivo de imagem inválido.");
+    }
+    const uploadResult = await cloudinary.uploader.upload(imageFile.path, {
+      public_id: `product_image_${imageFile.originalname}`,
+      folder: "products",
     });
     return uploadResult.secure_url;
   } catch (error) {
@@ -39,11 +43,15 @@ async function uploadImageToCloudinary(imageUrl, publicId) {
 
 async function createProductService(productData) {
   try {
-    if (productData.imageUrl) {
-      const imageUrl = await uploadImageToCloudinary(productData.imageUrl, `product_image_${productData.name}`);
+    if (productData.image) {
+      const imageUrl = await uploadImageToCloudinary(productData.image);
       productData.imageUrl = imageUrl;
     }
-    
+
+    if (productData.validity) {
+      productData.validity = new Date(productData.validity);
+    }
+
     const newProduct = new Product(productData);
     return await newProduct.save();
   } catch (error) {
@@ -53,10 +61,24 @@ async function createProductService(productData) {
 }
 
 async function updateProductService(id, updatedData) {
-  if (updatedData.validity) {
-    updatedData.validity = new Date(updatedData.validity);
+  try {
+    if (updatedData.image) {
+      const imageUrl = await uploadImageToCloudinary(updatedData.image);
+      updatedData.imageUrl = imageUrl;
+    } else {
+      const existingProduct = await Product.findById(id);
+      updatedData.imageUrl = existingProduct.imageUrl;
+    }
+
+    if (updatedData.validity) {
+      updatedData.validity = new Date(updatedData.validity);
+    }
+
+    return await Product.findByIdAndUpdate(id, updatedData, { new: true });
+  } catch (error) {
+    console.error("Erro ao atualizar produto:", error);
+    throw new Error("Erro ao atualizar produto.");
   }
-  return await Product.findByIdAndUpdate(id, updatedData, { new: true });
 }
 
 async function deleteProductService(id) {
