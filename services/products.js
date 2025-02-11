@@ -44,8 +44,8 @@ async function uploadImageToCloudinary(imageFile) {
 async function createProductService(productData) {
   try {
     if (productData.image) {
-      const imageUrl = await uploadImageToCloudinary(productData.image);
-      productData.imageUrl = imageUrl;
+      const image = await uploadImageToCloudinary(productData.image);
+      productData.image = image;
     }
 
     if (productData.validity) {
@@ -63,11 +63,11 @@ async function createProductService(productData) {
 async function updateProductService(id, updatedData) {
   try {
     if (updatedData.image) {
-      const imageUrl = await uploadImageToCloudinary(updatedData.image);
-      updatedData.imageUrl = imageUrl;
+      const image = await uploadImageToCloudinary(updatedData.image);
+      updatedData.image = image;
     } else {
       const existingProduct = await Product.findById(id);
-      updatedData.imageUrl = existingProduct.imageUrl;
+      updatedData.image = existingProduct.image;
     }
 
     if (updatedData.validity) {

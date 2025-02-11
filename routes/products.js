@@ -61,7 +61,7 @@ router.post("/", upload.single("image"), validateProductData, async (req, res) =
     return res.status(400).json({ errors: errors.array() });
   }
   try {
-    let imageUrl = null;
+    let image = null;
     if (req.file) {
       const uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
@@ -69,9 +69,9 @@ router.post("/", upload.single("image"), validateProductData, async (req, res) =
           resolve(result);
         }).end(req.file.buffer);
       });
-      imageUrl = uploadResult.secure_url;
+      image = uploadResult.secure_url;
     }
-    const newProduct = await createProductService({ ...req.body, image: imageUrl });
+    const newProduct = await createProductService({ ...req.body, image: image });
     res.status(201).json(newProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -84,7 +84,7 @@ router.put("/:id", upload.single("image"), [validateId, validateProductData], as
     return res.status(400).json({ errors: errors.array() });
   }
   try {
-    let imageUrl = req.body.image;
+    let image = req.body.image;
     if (req.file) {
       const uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
@@ -92,9 +92,9 @@ router.put("/:id", upload.single("image"), [validateId, validateProductData], as
           resolve(result);
         }).end(req.file.buffer);
       });
-      imageUrl = uploadResult.secure_url;
+      image = uploadResult.secure_url;
     }
-    const updatedProduct = await updateProductService(req.params.id, { ...req.body, image: imageUrl });
+    const updatedProduct = await updateProductService(req.params.id, { ...req.body, image: image });
     res.json(updatedProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
