@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const cloudinary = require("C:/projetos/death-star/config/cloudinary.js");
+const cloudinary = require("C:/projetos/death-star/config/cloudinary");
 const {
   getAllProducts,
   getProductByIdService,
