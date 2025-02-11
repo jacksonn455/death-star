@@ -45,11 +45,15 @@ const {
       if (req.file) {
         console.log("Imagem recebida na requisição POST:", req.file);
   
+        // Verificar o tipo da imagem corretamente
+        console.log("Tipo de imagem recebido:", req.file.mimetype);
+        
         const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
         if (!allowedFileTypes.includes(req.file.mimetype)) {
           return res.status(400).send("Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos.");
         }
   
+        // Fazer upload para o Cloudinary
         const uploadResult = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
             if (error) {
