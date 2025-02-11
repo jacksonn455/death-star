@@ -8,7 +8,7 @@ const ProductSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   supplier: { type: String, required: false },
   composition: { type: String, required: false },
-  image: { type: String, required: false }
+  imageUrl: { type: String, required: false } 
 });
 
 module.exports = mongoose.model("Product", ProductSchema);

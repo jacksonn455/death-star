@@ -1,4 +1,5 @@
 const Product = require("../models/products");
+const cloudinary = require("../config/cloudinary");
 
 async function getAllProducts(query) {
   try {
@@ -24,9 +25,31 @@ async function getProductByIdService(id) {
   return await Product.findById(id);
 }
 
+async function uploadImageToCloudinary(imageUrl, publicId) {
+  try {
+    const uploadResult = await cloudinary.uploader.upload(imageUrl, {
+      public_id: publicId,
+    });
+    return uploadResult.secure_url;
+  } catch (error) {
+    console.error("Erro ao fazer upload da imagem:", error);
+    throw new Error("Erro ao fazer upload da imagem.");
+  }
+}
+
 async function createProductService(productData) {
-  const newProduct = new Product(productData);
-  return await newProduct.save();
+  try {
+    if (productData.imageUrl) {
+      const imageUrl = await uploadImageToCloudinary(productData.imageUrl, `product_image_${productData.name}`);
+      productData.imageUrl = imageUrl;
+    }
+    
+    const newProduct = new Product(productData);
+    return await newProduct.save();
+  } catch (error) {
+    console.error("Erro ao criar produto:", error);
+    throw new Error("Erro ao criar produto.");
+  }
 }
 
 async function updateProductService(id, updatedData) {
