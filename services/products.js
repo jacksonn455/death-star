@@ -1,7 +1,24 @@
 const Product = require("../models/products");
+const moment = require("moment");
 
-async function getAllProducts() {
-  return await Product.find();
+async function getAllProducts(query) {
+  try {
+    const filters = {};
+
+    if (query && query.name) {
+      filters.name = { $regex: query.name, $options: 'i' };
+    }
+
+    if (query && query.validity) {
+      filters.validity = query.validity;
+    }
+
+    const products = await Product.find(filters).sort({ time: 1 });
+    return products;
+  } catch (error) {
+    console.error("Erro ao buscar produto:", error);
+    throw new Error("Erro ao buscar produto.");
+  }
 }
 
 async function getProductByIdService(id) {

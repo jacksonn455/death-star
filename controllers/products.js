@@ -8,7 +8,8 @@ const {
   
   async function getProducts(req, res) {
     try {
-      const products = await getAllProducts();
+      const { name, date } = req.query;
+      const products = await getAllProducts({ name, date });
       res.status(200).send(products);
     } catch (error) {
       res.status(500).send(error.message);
