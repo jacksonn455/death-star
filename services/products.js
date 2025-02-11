@@ -42,11 +42,7 @@ const uploadImageToCloudinary = async (imageFile) => {
 
   try {
     const uploadResult = await new Promise((resolve, reject) => {
-      console.log("Iniciando upload para o Cloudinary...");
-      console.log("Imagem em formato Base64:", "data:image/png;base64," + imageFile.buffer.toString("base64"));
-      
-      cloudinary.uploader.upload(
-        "data:image/png;base64," + imageFile.buffer.toString("base64"),
+      const stream = cloudinary.uploader.upload_stream(
         { folder: "products" },
         (error, result) => {
           if (error) {
@@ -57,6 +53,9 @@ const uploadImageToCloudinary = async (imageFile) => {
           resolve(result);
         }
       );
+
+      // Envia o conteúdo do buffer diretamente para o stream
+      stream.end(imageFile.buffer);
     });
 
     if (uploadResult.secure_url) {
