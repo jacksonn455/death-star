@@ -92,13 +92,16 @@ async function getAllPlanners(query) {
       filters.paciente = { $regex: query.paciente, $options: 'i' };
     }
 
+    if (!query || (!query.paciente && !query.date && !query.time)) {
+      return await Planner.find(filters).sort({ time: 1 });
+    }
+
     if (!query.paciente) {
       filters.date = today;
       filters.time = { $gte: currentTime };
     }
 
     const planners = await Planner.find(filters).sort({ time: 1 });
-
     return planners;
   } catch (error) {
     throw new Error("Erro ao buscar agendamentos.");
