@@ -67,27 +67,30 @@ router.get("/:id", validateId, async (req, res) => {
 });
 
 router.post("/", upload.single("image"), validateProductData, async (req, res) => {
-  console.log("Requisição POST para / com imagem:");
+  console.log("Requisição POST para / com imagem");
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log("Erros de validação:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
+  
   try {
     let image = null;
     if (req.file) {
-      console.log("Imagem recebida na requisição POST:", req.file);
+      console.log("Arquivo de imagem recebido:", req.file);
       const uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
           if (error) {
-            console.error("Erro ao fazer upload da imagem para o Cloudinary:", error);
+            console.error("Erro ao fazer upload para o Cloudinary:", error);
             reject(error);
+          } else {
+            console.log("Resultado do upload no Cloudinary:", result);
+            resolve(result);
           }
-          resolve(result);
         }).end(req.file.buffer);
       });
       image = uploadResult.secure_url;
-      console.log("URL da imagem após upload para o Cloudinary:", image);
+      console.log("URL da imagem no Cloudinary:", image);
     }
     const newProduct = await createProductService({ ...req.body, image: image });
     console.log("Novo produto criado com imagem:", newProduct);
