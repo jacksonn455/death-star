@@ -27,9 +27,9 @@ async function getProductByIdService(id) {
 
 // Função para fazer o upload da imagem
 const uploadImageToCloudinary = async (imageFile) => {
-  const validTypes = ["image/jpeg", "image/png", "image/jpg"];
   console.log("Tipo de imagem recebido:", imageFile.mimetype);
 
+  const validTypes = ["image/jpeg", "image/png", "image/jpg"];
   if (!validTypes.includes(imageFile.mimetype)) {
     throw new Error("Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos.");
   }
