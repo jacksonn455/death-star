@@ -86,20 +86,22 @@ async function getAllPlanners(query) {
     const today = now.format("YYYY-MM-DD");
     const currentTime = now.format("HH:mm");
 
-    const filters = {
-      date: today,
-      time: { $gte: currentTime },
-    };
+    const filters = {};
 
     if (query && query.paciente) {
       filters.paciente = { $regex: query.paciente, $options: 'i' };
+    }
+
+    if (!query.paciente) {
+      filters.date = today;
+      filters.time = { $gte: currentTime };
     }
 
     const planners = await Planner.find(filters).sort({ time: 1 });
 
     return planners;
   } catch (error) {
-    throw new Error("Erro ao buscar agendamentos do dia.");
+    throw new Error("Erro ao buscar agendamentos.");
   }
 }
 
