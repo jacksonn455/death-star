@@ -39,9 +39,17 @@ const uploadImageToCloudinary = async (imageFile) => {
   }
 
   try {
-    const uploadResult = await cloudinary.uploader.upload(imageFile.buffer, {
-      folder: "products",
-    });
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { folder: "products" },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result);
+        }
+      ).end(req.file.buffer);
+    });    
 
     if (uploadResult.secure_url) {
       return uploadResult.secure_url;
