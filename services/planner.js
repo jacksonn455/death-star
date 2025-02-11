@@ -80,16 +80,22 @@ async function addEventToGoogleCalendar(eventData) {
   }
 }
 
-async function getAllPlanners() {
+async function getAllPlanners(query) {
   try {
     const now = moment();
     const today = now.format("YYYY-MM-DD");
     const currentTime = now.format("HH:mm");
 
-    const planners = await Planner.find({
+    const filters = {
       date: today,
       time: { $gte: currentTime },
-    }).sort({ time: 1 });
+    };
+
+    if (query && query.paciente) {
+      filters.paciente = { $regex: query.paciente, $options: 'i' };
+    }
+
+    const planners = await Planner.find(filters).sort({ time: 1 });
 
     return planners;
   } catch (error) {
