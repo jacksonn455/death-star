@@ -44,8 +44,10 @@ async function uploadImageToCloudinary(imageFile) {
 async function createProductService(productData) {
   try {
     if (productData.image) {
+      console.log("Processando imagem antes de salvar no banco de dados:", productData.image);
       const image = await uploadImageToCloudinary(productData.image);
       productData.image = image;
+      console.log("URL da imagem depois de upload no Cloudinary:", productData.image);
     }
 
     if (productData.validity) {
@@ -53,10 +55,33 @@ async function createProductService(productData) {
     }
 
     const newProduct = new Product(productData);
-    return await newProduct.save();
+    const savedProduct = await newProduct.save();
+    console.log("Produto salvo com sucesso:", savedProduct);
+    return savedProduct;
   } catch (error) {
-    console.error("Erro ao criar produto:", error);
+    console.error("Erro ao criar produto no banco de dados:", error);
     throw new Error("Erro ao criar produto.");
+  }
+}
+
+async function uploadImageToCloudinary(imageFile) {
+  try {
+    if (!imageFile || !imageFile.buffer) {
+      throw new Error("Arquivo de imagem inválido.");
+    }
+    console.log("Iniciando upload da imagem para o Cloudinary:", imageFile.originalname);
+    const uploadResult = await cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
+      if (error) {
+        console.error("Erro ao fazer upload para o Cloudinary:", error);
+        throw new Error("Erro ao fazer upload da imagem.");
+      }
+      console.log("Resultado do upload da imagem no Cloudinary:", result);
+      return result;
+    }).end(imageFile.buffer);
+    return uploadResult.secure_url;
+  } catch (error) {
+    console.error("Erro ao fazer upload da imagem:", error);
+    throw new Error("Erro ao fazer upload da imagem.");
   }
 }
 

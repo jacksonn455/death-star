@@ -34,19 +34,37 @@ const {
     try {
       const productData = req.body;
       const requiredFields = ["name", "category", "quantity", "price", "supplier"];
-  
+    
       for (const field of requiredFields) {
         if (!productData[field]) {
           return res.status(400).send(`O campo "${field}" é obrigatório.`);
         }
       }
   
-      const newProduct = await createProductService(productData);
-      res.status(201).send(newProduct);
+      let image = null;
+      if (req.file) {
+        console.log("Imagem recebida na requisição POST:", req.file);
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
+            if (error) {
+              console.error("Erro ao fazer upload da imagem para o Cloudinary:", error);
+              reject(error);
+            }
+            resolve(result);
+          }).end(req.file.buffer);
+        });
+        image = uploadResult.secure_url;
+        console.log("URL da imagem no Cloudinary após upload:", image);
+      }
+  
+      const newProduct = await createProductService({ ...req.body, image: image });
+      console.log("Novo produto criado com imagem:", newProduct);
+      res.status(201).json(newProduct);
     } catch (error) {
-      res.status(500).send(error.message);
+      console.error("Erro ao criar produto:", error);
+      res.status(500).json({ error: error.message });
     }
-  }
+  }  
   
   async function updateProduct(req, res) {
     try {
