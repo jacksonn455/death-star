@@ -8,7 +8,8 @@ const {
   
   async function getPlanners(req, res) {
     try {
-      const planners = await getAllPlanners();
+      const { paciente, date } = req.query;
+      const planners = await getAllPlanners({ paciente, date });
       res.status(200).send(planners);
     } catch (error) {
       res.status(500).send(error.message);
