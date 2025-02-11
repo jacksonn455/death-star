@@ -17,12 +17,16 @@ const upload = multer({ storage });
 
 const validateProductData = [
   body("name").isString().notEmpty().withMessage("Nome do produto é obrigatório"),
-  body("quantity").isInt({ min: 0 }).withMessage("Quantidade deve ser um número inteiro positivo"),
-  body("price").isFloat({ min: 0 }).withMessage("Preço deve ser um número positivo"),
+  body("quantity")
+    .isInt({ min: 1 })
+    .withMessage("Quantidade deve ser um número inteiro maior que 0"),
+  body("price")
+    .isFloat({ min: 0.01 })
+    .withMessage("Preço deve ser um número positivo e maior que 0"),
   body("validity")
     .optional()
     .custom((value) => {
-      if (!moment(value, moment.ISO_8601, true).isValid()) {
+      if (value && !moment(value, moment.ISO_8601, true).isValid()) {
         throw new Error("Validade deve ser uma data válida");
       }
       return true;
@@ -73,27 +77,28 @@ router.post("/", upload.single("image"), validateProductData, async (req, res) =
     console.log("Erros de validação:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
-  
+
   try {
     let image = null;
     if (req.file) {
       console.log("Arquivo de imagem recebido:", req.file);
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
-          if (error) {
-            console.error("Erro ao fazer upload para o Cloudinary:", error);
-            reject(error);
-          } else {
-            console.log("Resultado do upload no Cloudinary:", result);
-            resolve(result);
-          }
-        }).end(req.file.buffer);
+      console.log("Tamanho do arquivo de imagem:", req.file.size);
+      console.log("Tipo de arquivo:", req.file.mimetype);
+
+      // Iniciando o upload para o Cloudinary
+      console.log("Iniciando upload para o Cloudinary...");
+      const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
+        folder: "products",
       });
+
       image = uploadResult.secure_url;
       console.log("URL da imagem no Cloudinary:", image);
+    } else {
+      console.log("Nenhuma imagem enviada.");
     }
-    const newProduct = await createProductService({ ...req.body, image: image });
-    console.log("Novo produto criado com imagem:", newProduct);
+
+    const newProduct = await createProductService({ ...req.body, image });
+    console.log("Novo produto criado:", newProduct);
     res.status(201).json(newProduct);
   } catch (error) {
     console.error("Erro ao criar produto:", error);
@@ -108,23 +113,25 @@ router.put("/:id", upload.single("image"), [validateId, validateProductData], as
     console.log("Erros de validação:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
+
   try {
     let image = req.body.image;
     if (req.file) {
       console.log("Arquivo de imagem recebido para atualização:", req.file);
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
-          if (error) {
-            console.error("Erro ao fazer upload para o Cloudinary:", error);
-            reject(error);
-          }
-          resolve(result);
-        }).end(req.file.buffer);
+      console.log("Tamanho do arquivo de imagem:", req.file.size);
+      console.log("Tipo de arquivo:", req.file.mimetype);
+
+      // Iniciando o upload para o Cloudinary
+      console.log("Iniciando upload para o Cloudinary...");
+      const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
+        folder: "products",
       });
+
       image = uploadResult.secure_url;
       console.log("URL da imagem atualizada no Cloudinary:", image);
     }
-    const updatedProduct = await updateProductService(req.params.id, { ...req.body, image: image });
+
+    const updatedProduct = await updateProductService(req.params.id, { ...req.body, image });
     console.log("Produto atualizado:", updatedProduct);
     res.json(updatedProduct);
   } catch (error) {
