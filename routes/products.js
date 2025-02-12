@@ -138,7 +138,8 @@ router.put(
     }
 
     try {
-      let image = null;
+      let image = req.body.image;
+
       if (req.file) {
         const uploadFromBuffer = (buffer) => {
           return new Promise((resolve, reject) => {
@@ -170,8 +171,6 @@ router.put(
         };
 
         image = await uploadFromBuffer(req.file.buffer);
-      } else if (req.body.image) {
-        image = req.body.image;
       }
 
       const updatedProduct = await updateProductService(req.params.id, {
