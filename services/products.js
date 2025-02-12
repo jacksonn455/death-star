@@ -2,6 +2,8 @@ const Product = require("../models/products");
 const cloudinary = require("../config/cloudinary");
 const streamifier = require("streamifier");
 
+const moment = require('moment'); // Certifique-se de instalar o moment.js
+
 async function getAllProducts(query) {
   try {
     const filters = {};
@@ -9,7 +11,11 @@ async function getAllProducts(query) {
     if (query?.name) {
       filters.name = { $regex: query.name, $options: "i" };
     }
-    if (query?.validity) {
+
+    if (query?.validity === 'soon') {
+      const sixMonthsFromNow = moment().add(6, 'months').toDate();
+      filters.validity = { $lte: sixMonthsFromNow, $gte: new Date() };
+    } else if (query?.validity) {
       filters.validity = query.validity;
     }
 
