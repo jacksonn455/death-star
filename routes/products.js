@@ -138,8 +138,7 @@ router.put(
     }
 
     try {
-      let image = req.body.image;
-
+      let image = null;
       if (req.file) {
         const uploadFromBuffer = (buffer) => {
           return new Promise((resolve, reject) => {
@@ -171,6 +170,12 @@ router.put(
         };
 
         image = await uploadFromBuffer(req.file.buffer);
+      } else {
+        const existingProduct = await Product.findById(req.params.id);
+        if (!existingProduct) {
+          return res.status(404).json({ error: "Produto não encontrado." });
+        }
+        image = existingProduct.image;
       }
 
       const updatedProduct = await updateProductService(req.params.id, {
