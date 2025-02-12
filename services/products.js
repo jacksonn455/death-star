@@ -76,16 +76,36 @@ const uploadImageToCloudinary = (imageFile) => {
 
 async function createProductService(productData) {
   try {
+    console.log("🚀 Iniciando criação do produto...");
+    console.log("📦 Dados recebidos:", productData);
+
     if (productData.image) {
-      productData.image = await uploadImageToCloudinary(productData.image);
-    }
-    if (productData.validity) {
-      productData.validity = new Date(productData.validity);
+      console.log("🖼️ Imagem recebida. Verificando tipo...");
+      
+      if (typeof productData.image === "string") {
+        console.log("✅ A imagem já é uma URL, sem necessidade de upload.");
+      } else {
+        console.log("🚀 Fazendo upload da imagem para o Cloudinary...");
+        productData.image = await uploadImageToCloudinary(productData.image);
+        console.log("✅ Upload finalizado. URL da imagem:", productData.image);
+      }
+    } else {
+      console.log("⚠️ Nenhuma imagem enviada.");
     }
 
-    return await new Product(productData).save();
+    if (productData.validity) {
+      console.log("📅 Convertendo validade para Date...");
+      productData.validity = new Date(productData.validity);
+      console.log("✅ Nova validade:", productData.validity);
+    }
+
+    console.log("💾 Salvando produto no banco de dados...");
+    const newProduct = await new Product(productData).save();
+    console.log("✅ Produto criado com sucesso:", newProduct);
+
+    return newProduct;
   } catch (error) {
-    console.error("Erro ao criar produto:", error);
+    console.error("❌ Erro ao criar produto:", error);
     throw new Error("Erro ao criar produto.");
   }
 }
