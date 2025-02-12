@@ -1,5 +1,7 @@
 const Product = require("../models/products");
 const cloudinary = require("../config/cloudinary");
+const fs = require("fs");
+const path = require("path");
 
 async function getAllProducts(query) {
   try {
@@ -24,29 +26,36 @@ async function getProductByIdService(id) {
 }
 
 const uploadImageToCloudinary = async (imageFile) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "products",
-        fetch_format: "auto",
-        quality: "auto",
-        width: 500,
-        height: 500,
-        crop: "limit",
-      },
-      (error, result) => {
-        if (error) {
-          console.error("Erro ao fazer upload da imagem:", error);
-          reject(error);
-        } else {
-          console.log("Upload bem-sucedido:", result.secure_url);
-          resolve(result.secure_url);
-        }
-      }
-    );
+  try {
+    // Criar um caminho temporário para salvar a imagem
+    const tempPath = path.join(__dirname, "..", "temp", imageFile.originalname);
 
-    stream.end(imageFile.buffer);
-  });
+    // Salvar o buffer no sistema de arquivos
+    await fs.promises.writeFile(tempPath, imageFile.buffer);
+
+    console.log("Imagem salva temporariamente em:", tempPath);
+
+    // Enviar para o Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(tempPath, {
+      folder: "products",
+      fetch_format: "auto",
+      quality: "auto",
+      width: 500,
+      height: 500,
+      crop: "limit",
+    });
+
+    console.log("Upload bem-sucedido:", uploadResult.secure_url);
+
+    // Remover o arquivo temporário após o upload
+    await fs.promises.unlink(tempPath);
+    console.log("Imagem temporária removida");
+
+    return uploadResult.secure_url;
+  } catch (error) {
+    console.error("Erro ao fazer upload da imagem:", error);
+    throw new Error("Erro ao fazer upload da imagem.");
+  }
 };
 
 async function createProductService(productData) {
