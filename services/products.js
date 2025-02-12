@@ -90,13 +90,12 @@ async function createProductService(productData) {
 
 async function updateProductService(id, updatedData) {
   try {
-    if (updatedData.image && typeof updatedData.image !== "string") {
-      updatedData.image = await uploadImageToCloudinary(updatedData.image);
-    } else {
-      const existingProduct = await Product.findById(id);
-      if (!existingProduct) {
-        throw new Error("Produto não encontrado.");
-      }
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      throw new Error("Produto não encontrado.");
+    }
+
+    if (!updatedData.image) {
       updatedData.image = existingProduct.image;
     }
 
