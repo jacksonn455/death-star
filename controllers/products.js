@@ -106,38 +106,33 @@ async function updateProduct(req, res) {
     let image = updatedData.image || null;
 
     if (req.file) {
-      console.log("Imagem recebida na requisição PUT:", req.file);
-
-      console.log("Tipo de imagem recebido:", req.file.mimetype);
-      const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedFileTypes.includes(req.file.mimetype)) {
-        return res
-          .status(400)
-          .send(
-            "Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos."
-          );
+      if (!req.file.buffer) {
+        return res.status(400).send("O arquivo não possui buffer.");
       }
 
-      // Fazer upload para o Cloudinary
+      console.log("Imagem recebida na requisição PUT:", req.file);
+      console.log("Tipo de imagem recebido:", req.file.mimetype);
+      
+      const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedFileTypes.includes(req.file.mimetype)) {
+        return res.status(400).send("Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos.");
+      }
+
+      // Upload para o Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream({ folder: "products" }, (error, result) => {
-            if (error) {
-              console.error(
-                "Erro ao fazer upload da imagem para o Cloudinary:",
-                error
-              );
-              reject(error);
-            }
-            resolve(result);
-          })
-          .end(req.file.buffer);
+        cloudinary.uploader.upload_stream({ folder: "products" }, (error, result) => {
+          if (error) {
+            console.error("Erro ao fazer upload da imagem para o Cloudinary:", error);
+            reject(error);
+          }
+          resolve(result);
+        }).end(req.file.buffer);
       });
 
       image = uploadResult.secure_url;
       console.log("URL da imagem no Cloudinary após upload:", image);
     } else {
-      // Se nenhuma nova imagem for enviada, manter a imagem atual do produto
+      // Se nenhuma nova imagem for enviada, buscar a imagem existente
       const existingProduct = await Product.findById(id);
       if (!existingProduct) {
         return res.status(404).send("Produto não encontrado.");
@@ -145,10 +140,7 @@ async function updateProduct(req, res) {
       image = existingProduct.image;
     }
 
-    const updatedProduct = await updateProductService(id, {
-      ...updatedData,
-      image,
-    });
+    const updatedProduct = await updateProductService(id, { ...updatedData, image });
     console.log("Produto atualizado:", updatedProduct);
     res.status(200).json(updatedProduct);
   } catch (error) {
