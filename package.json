@@ -30,7 +30,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemon": "^3.1.9",
     "path": "^0.12.7",
-    "sign": "^1.0.2"
+    "sign": "^1.0.2",
+    "streamifier": "^0.1.1"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0"
