@@ -24,29 +24,36 @@ async function getProductByIdService(id) {
   return await Product.findById(id);
 }
 
-const uploadImageToCloudinary = async (imageFile) => {
+const uploadImageToCloudinary = (imageFile) => {
   return new Promise((resolve, reject) => {
+    if (!imageFile || !imageFile.buffer) {
+      return reject(new Error("Arquivo inválido ou não fornecido."));
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "products",
-        fetch_format: "auto",
-        quality: "auto",
-        width: 500,
-        height: 500,
-        crop: "limit",
+        resource_type: "auto", // Aceita qualquer tipo de arquivo
+        use_filename: true, // Usa o nome original do arquivo
+        unique_filename: false, // Evita renomear
+        overwrite: true,
+        format: "png", // Força um formato seguro
+        transformation: [
+          { width: 500, height: 500, crop: "limit" },
+          { quality: "auto" },
+        ],
       },
       (error, result) => {
         if (error) {
-          console.error("Erro ao fazer upload da imagem:", error);
-          reject(new Error("Erro ao fazer upload da imagem."));
-        } else {
-          console.log("Upload bem-sucedido:", result.secure_url);
-          resolve(result.secure_url);
+          console.error("Erro no upload:", error);
+          return reject(new Error("Erro ao fazer upload da imagem no Cloudinary."));
         }
+
+        console.log("Upload bem-sucedido:", result.secure_url);
+        resolve(result.secure_url);
       }
     );
 
-    // Criar um stream a partir do buffer e enviá-lo
     streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
   });
 };
