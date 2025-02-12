@@ -24,41 +24,29 @@ async function getProductByIdService(id) {
 }
 
 const uploadImageToCloudinary = async (imageFile) => {
-  console.log("Tipo de imagem recebido:", imageFile.mimetype);
-  console.log("Tamanho da imagem recebido:", imageFile.size);
-  
-  const validTypes = ["image/jpeg", "image/png", "image/jpg"];
-  if (!validTypes.includes(imageFile.mimetype)) {
-    throw new Error("Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos.");
-  }
-  if (imageFile.size > 5000000) {
-    throw new Error("O tamanho da imagem deve ser no máximo 5MB.");
-  }
-
-  try {
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: "products",
-          fetch_format: "auto",
-          quality: "auto",
-          width: 500,
-          height: 500,
-          crop: "limit",
-        },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result);
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "products",
+        fetch_format: "auto",
+        quality: "auto",
+        width: 500,
+        height: 500,
+        crop: "limit",
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Erro ao fazer upload da imagem:", error);
+          reject(error);
+        } else {
+          console.log("Upload bem-sucedido:", result.secure_url);
+          resolve(result.secure_url);
         }
-      );
-      stream.end(imageFile.buffer);
-    });
+      }
+    );
 
-    return uploadResult.secure_url;
-  } catch (error) {
-    console.error("Erro ao fazer upload da imagem:", error);
-    throw new Error("Erro ao fazer upload da imagem.");
-  }
+    stream.end(imageFile.buffer);
+  });
 };
 
 async function createProductService(productData) {
