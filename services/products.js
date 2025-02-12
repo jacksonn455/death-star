@@ -36,7 +36,6 @@ const uploadImageToCloudinary = (imageFile) => {
       return reject(new Error("O arquivo não possui buffer."));
     }
 
-    // Criando stream de upload para evitar o erro de "path"
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "products",
