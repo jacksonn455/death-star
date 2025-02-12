@@ -26,8 +26,6 @@ async function getProductByIdService(id) {
 
 const uploadImageToCloudinary = (imageFile) => {
   return new Promise((resolve, reject) => {
-    console.log("⏳ Iniciando upload para o Cloudinary...");
-
     if (!imageFile) {
       console.error("❌ Erro: Nenhum arquivo recebido.");
       return reject(new Error("Nenhum arquivo recebido."));
@@ -37,11 +35,6 @@ const uploadImageToCloudinary = (imageFile) => {
       console.error("❌ Erro: O arquivo não possui buffer.");
       return reject(new Error("O arquivo não possui buffer."));
     }
-
-    console.log("✅ Arquivo validado:");
-    console.log("📝 Nome:", imageFile.originalname);
-    console.log("📂 Tipo:", imageFile.mimetype);
-    console.log("📏 Tamanho:", imageFile.size, "bytes");
 
     // Criando stream de upload para evitar o erro de "path"
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -60,53 +53,38 @@ const uploadImageToCloudinary = (imageFile) => {
       (error, result) => {
         if (error) {
           console.error("❌ Erro ao fazer upload:", error);
-          return reject(new Error("Erro ao fazer upload da imagem no Cloudinary."));
+          return reject(
+            new Error("Erro ao fazer upload da imagem no Cloudinary.")
+          );
         }
 
-        console.log("✅ Upload concluído com sucesso!");
-        console.log("🌍 URL da imagem:", result.secure_url);
         resolve(result.secure_url);
       }
     );
 
-    console.log("🚀 Enviando buffer para o Cloudinary...");
     streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
   });
 };
 
 async function createProductService(productData) {
   try {
-    console.log("🚀 Iniciando criação do produto...");
-    console.log("📦 Dados recebidos:", productData);
-
     if (productData.image) {
-      console.log("🖼️ Imagem recebida. Verificando tipo...");
-      
       if (typeof productData.image === "string") {
-        console.log("✅ A imagem já é uma URL, sem necessidade de upload.");
       } else {
-        console.log("🚀 Fazendo upload da imagem para o Cloudinary...");
         productData.image = await uploadImageToCloudinary(productData.image);
-        console.log("✅ Upload finalizado. URL da imagem:", productData.image);
       }
     } else {
-      console.log("⚠️ Nenhuma imagem enviada.");
     }
 
     if (productData.validity) {
-      console.log("📅 Convertendo validade para Date...");
       productData.validity = new Date(productData.validity);
-      console.log("✅ Nova validade:", productData.validity);
     }
 
-    console.log("💾 Salvando produto no banco de dados...");
     const newProduct = await new Product(productData).save();
-    console.log("✅ Produto criado com sucesso:", newProduct);
 
     return newProduct;
   } catch (error) {
     console.error("❌ Erro ao criar produto:", error);
-    throw new Error("Erro ao criar produto.");
   }
 }
 
