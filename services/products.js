@@ -1,8 +1,7 @@
 const Product = require("../models/products");
 const cloudinary = require("../config/cloudinary");
 const streamifier = require("streamifier");
-
-const moment = require('moment'); // Certifique-se de instalar o moment.js
+const moment = require('moment');
 
 async function getAllProducts(query) {
   try {

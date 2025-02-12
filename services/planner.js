@@ -92,6 +92,16 @@ async function getAllPlanners(query) {
       filters.date = moment(query.date, "YYYY-MM-DD").format("YYYY-MM-DD");
     }
 
+    if (query && query.week) {
+      const startOfWeek = moment().startOf('week').format("YYYY-MM-DD");
+      const endOfWeek = moment().endOf('week').format("YYYY-MM-DD");
+
+      filters.date = {
+        $gte: startOfWeek,
+        $lte: endOfWeek,
+      };
+    }
+
     const planners = await Planner.find(filters).sort({ time: 1 });
     return planners;
   } catch (error) {
