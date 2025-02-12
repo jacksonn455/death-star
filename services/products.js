@@ -26,18 +26,32 @@ async function getProductByIdService(id) {
 
 const uploadImageToCloudinary = (imageFile) => {
   return new Promise((resolve, reject) => {
-    if (!imageFile || !imageFile.buffer) {
-      return reject(new Error("Arquivo inválido ou não fornecido."));
+    console.log("⏳ Iniciando upload para o Cloudinary...");
+
+    if (!imageFile) {
+      console.error("❌ Erro: Nenhum arquivo recebido.");
+      return reject(new Error("Nenhum arquivo recebido."));
     }
 
+    if (!imageFile.buffer) {
+      console.error("❌ Erro: O arquivo não possui buffer.");
+      return reject(new Error("O arquivo não possui buffer."));
+    }
+
+    console.log("✅ Arquivo validado:");
+    console.log("📝 Nome:", imageFile.originalname);
+    console.log("📂 Tipo:", imageFile.mimetype);
+    console.log("📏 Tamanho:", imageFile.size, "bytes");
+
+    // Criando stream de upload para evitar o erro de "path"
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "products",
-        resource_type: "auto", // Aceita qualquer tipo de arquivo
-        use_filename: true, // Usa o nome original do arquivo
-        unique_filename: false, // Evita renomear
+        resource_type: "auto",
+        use_filename: true,
+        unique_filename: false,
         overwrite: true,
-        format: "png", // Força um formato seguro
+        format: "png",
         transformation: [
           { width: 500, height: 500, crop: "limit" },
           { quality: "auto" },
@@ -45,15 +59,17 @@ const uploadImageToCloudinary = (imageFile) => {
       },
       (error, result) => {
         if (error) {
-          console.error("Erro no upload:", error);
+          console.error("❌ Erro ao fazer upload:", error);
           return reject(new Error("Erro ao fazer upload da imagem no Cloudinary."));
         }
 
-        console.log("Upload bem-sucedido:", result.secure_url);
+        console.log("✅ Upload concluído com sucesso!");
+        console.log("🌍 URL da imagem:", result.secure_url);
         resolve(result.secure_url);
       }
     );
 
+    console.log("🚀 Enviando buffer para o Cloudinary...");
     streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
   });
 };
