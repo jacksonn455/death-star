@@ -84,7 +84,6 @@ router.post(
       let image = null;
 
       if (req.file) {
-        // Criando uma promise para aguardar o upload corretamente
         const uploadFromBuffer = (buffer) => {
           return new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
@@ -139,15 +138,40 @@ router.put(
     }
 
     try {
-      let image = req.body.image;
+      let image = null;
       if (req.file) {
-        // Iniciando o upload para o Cloudinary
+        const uploadFromBuffer = (buffer) => {
+          return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+              {
+                folder: "products",
+                resource_type: "auto",
+                use_filename: true,
+                unique_filename: false,
+                overwrite: true,
+                format: "png",
+                transformation: [
+                  { width: 500, height: 500, crop: "limit" },
+                  { quality: "auto" },
+                ],
+              },
+              (error, result) => {
+                if (error) {
+                  console.error("❌ Erro no upload para o Cloudinary:", error);
+                  return reject(error);
+                }
 
-        const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
-          folder: "products",
-        });
+                resolve(result.secure_url);
+              }
+            );
 
-        image = uploadResult.secure_url;
+            streamifier.createReadStream(buffer).pipe(uploadStream);
+          });
+        };
+
+        image = await uploadFromBuffer(req.file.buffer);
+      } else if (req.body.image) {
+        image = req.body.image;
       }
 
       const updatedProduct = await updateProductService(req.params.id, {
