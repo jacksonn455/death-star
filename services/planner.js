@@ -89,7 +89,14 @@ async function getAllPlanners(query) {
     }
 
     if (query && query.date) {
-      filters.date = moment(query.date, "YYYY-MM-DD").format("YYYY-MM-DD");
+      const date = moment(query.date, "YYYY-MM-DD");
+      const now = moment();
+
+      filters.date = date.format("YYYY-MM-DD");
+
+      if (date.isSame(now, 'day')) {
+        filters.time = { $gte: now.format("HH:mm") };
+      }
     }
 
     if (query && query.week) {
