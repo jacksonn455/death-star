@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { google } = require("googleapis");
 const Planner = require("../models/planner");
-const moment = require("moment");
+const moment = require("moment-timezone");
 require('dotenv').config();
 
 async function createPlannerService(data) {
@@ -85,30 +85,24 @@ async function getAllPlanners(query) {
     const filters = {};
 
     if (query?.paciente) {
-      filters.paciente = { $regex: query.paciente, $options: 'i' };
+      filters.paciente = { $regex: query.paciente, $options: "i" };
     }
 
     if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD");
-      const now = moment();
-
-      filters.date = date.format("YYYY-MM-DD");
-
-      if (date.isSame(now, 'day')) {
-        filters.time = { $gte: now.format("HH:mm") };
-      }
+      const date = moment.tz(query.date, "YYYY-MM-DD", "America/Sao_Paulo");
+      filters.date = {
+        $gte: date.startOf("day").toDate(),
+        $lt: date.endOf("day").toDate(),
+      };
     }
 
     if (query?.week) {
-      const startOfWeek = moment().startOf('week').format("YYYY-MM-DD");
-      const endOfWeek = moment().endOf('week').format("YYYY-MM-DD");
-
-      filters.date = { $gte: startOfWeek, $lte: endOfWeek };
+      const startOfWeek = moment.tz("America/Sao_Paulo").startOf("week").toDate();
+      const endOfWeek = moment.tz("America/Sao_Paulo").endOf("week").toDate();
+      filters.date = { $gte: startOfWeek, $lt: endOfWeek };
     }
 
-    const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
-
-    return planners;
+    return await Planner.find(filters).sort({ date: 1, time: 1 });
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);
     throw new Error("Erro ao buscar agendamentos.");
