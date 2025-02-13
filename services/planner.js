@@ -84,11 +84,11 @@ async function getAllPlanners(query) {
   try {
     const filters = {};
 
-    if (query && query.paciente) {
+    if (query?.paciente) {
       filters.paciente = { $regex: query.paciente, $options: 'i' };
     }
 
-    if (query && query.date) {
+    if (query?.date) {
       const date = moment(query.date, "YYYY-MM-DD");
       const now = moment();
 
@@ -99,17 +99,15 @@ async function getAllPlanners(query) {
       }
     }
 
-    if (query && query.week) {
+    if (query?.week) {
       const startOfWeek = moment().startOf('week').format("YYYY-MM-DD");
       const endOfWeek = moment().endOf('week').format("YYYY-MM-DD");
 
-      filters.date = {
-        $gte: startOfWeek,
-        $lte: endOfWeek,
-      };
+      filters.date = { $gte: startOfWeek, $lte: endOfWeek };
     }
 
-    const planners = await Planner.find(filters).sort({ time: 1 });
+    const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
+
     return planners;
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);
