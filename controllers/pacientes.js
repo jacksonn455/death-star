@@ -1,110 +1,130 @@
-const fs = require("fs");
+const mongoose = require("mongoose");
 const {
-  getTodosPacientes,
-  getPacientePorId,
-  inserePaciente,
-  modificaPaciente,
-  deletaPacientePorId,
+  getAllPacientes,
+  getPacienteByIdService,
+  createPacienteService,
+  updatePacienteService,
+  deletePacienteService,
 } = require("../services/pacientes");
 
-function getPacientes(req, res) {
+async function getPacientes(req, res) {
   try {
-    const pacientes = getTodosPacientes();
-    res.send(pacientes);
-  } catch (e) {
-    res.status(500).send(e.message);
+    const { nome, genero, idade } = req.query;
+    const pacientes = await getAllPacientes({ nome, genero, idade });
+    res.status(200).send(pacientes);
+  } catch (error) {
+    console.error("Erro ao buscar pacientes:", error);
+    res.status(500).send({ error: error.message });
   }
 }
 
-function getPaciente(req, res) {
+async function getPacienteById(req, res) {
   try {
     const id = req.params.id;
-    if (id && Number(id)) {
-      const pacientes = getPacientePorId(id);
-      res.send(pacientes);
+    if (id && mongoose.Types.ObjectId.isValid(id)) {
+      const paciente = await getPacienteByIdService(id);
+      if (!paciente) {
+        return res.status(404).send("Paciente não encontrado.");
+      }
+      res.status(200).send(paciente);
     } else {
-      res.status(422);
-      res.send("Id inválido");
+      res.status(422).send("ID inválido");
     }
   } catch (error) {
-    res.status(500);
-    res.send(error.message);
+    console.error("Erro ao buscar paciente por ID:", error);
+    res.status(500).send({ error: error.message });
   }
 }
 
-function postPaciente(req, res) {
+async function createPaciente(req, res) {
   try {
-    const pacienteNovo = req.body;
+    if (!req || !res) {
+      throw new Error("Requisição ou resposta não definida.");
+    }
 
-    const camposObrigatorios = ["id", "nome", "sobrenome", "idade", "dataNascimento"];
-    for (const campo of camposObrigatorios) {
-      if (!pacienteNovo[campo]) {
-        return res.status(400).send(`O campo "${campo}" é obrigatório.`);
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).send("Nenhum dado foi enviado.");
+    }
+
+    const pacienteData = req.body;
+    const requiredFields = [
+      "nome",
+      "idade",
+      "genero",
+      "telefone",
+      "email",
+      "dataNascimento",
+      "tabagista",
+      "alcool",
+      "covid",
+      "suplementacao",
+      "refeicoes",
+      "carne",
+      "lanches",
+      "refrigerante",
+      "frutas",
+      "leite",
+      "madrugada",
+    ];
+
+    for (const field of requiredFields) {
+      if (pacienteData[field] === undefined) {
+        return res.status(400).send(`O campo "${field}" é obrigatório.`);
       }
     }
 
-    if (typeof pacienteNovo.id !== "number") {
-      return res.status(400).send('O campo "id" deve ser um número.');
-    }
-    if (typeof pacienteNovo.nome !== "string" || typeof pacienteNovo.sobrenome !== "string") {
-      return res.status(400).send('Os campos "nome" e "sobrenome" devem ser strings.');
-    }
-    if (typeof pacienteNovo.idade !== "number" || pacienteNovo.idade <= 0) {
-      return res.status(400).send('O campo "idade" deve ser um número maior que 0.');
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(pacienteNovo.dataNascimento)) {
-      return res.status(400).send('O campo "dataNascimento" deve estar no formato "YYYY-MM-DD".');
-    }
-
-    const pacientesAtuais = getTodosPacientes();
-    if (pacientesAtuais.some(paciente => paciente.id === pacienteNovo.id)) {
-      return res.status(400).send('Já existe um paciente com o mesmo "id".');
-    }
-
-    inserePaciente(pacienteNovo);
-    res.status(201).send("Paciente cadastrado com sucesso.");
+    const newPaciente = await createPacienteService(pacienteData);
+    res.status(201).json(newPaciente);
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error("Erro ao criar paciente:", error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-function patchPaciente(req, res) {
+async function updatePaciente(req, res) {
   try {
     const id = req.params.id;
-    if (id && Number(id)) {
-      const body = req.body;
-      modificaPaciente(body, id);
-      res.send("Item modificado com sucesso");
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(422).send("ID inválido");
+    }
+
+    const updatedData = req.body;
+
+    const updatedPaciente = await updatePacienteService(id, updatedData);
+    if (!updatedPaciente) {
+      return res.status(404).send("Paciente não encontrado.");
+    }
+
+    res.status(200).json(updatedPaciente);
+  } catch (error) {
+    console.error("Erro ao atualizar paciente:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+async function deletePaciente(req, res) {
+  try {
+    const id = req.params.id;
+
+    if (id && mongoose.Types.ObjectId.isValid(id)) {
+      const paciente = await deletePacienteService(id);
+      if (!paciente) {
+        return res.status(404).send("Paciente não encontrado.");
+      }
+      res.status(200).send("Paciente excluído com sucesso.");
     } else {
-      res.status(422);
-      res.send("Id inválido");
+      res.status(422).send("ID inválido");
     }
   } catch (error) {
-    res.status(500);
-    res.send(error.message);
-  }
-}
-
-function deletePaciente(req, res) {
-  try {
-    const id = req.params.id;
-    if(id && Number(id)) {
-      deletaPacientePorId(id)
-      res.send("livro deletado com sucesso")
-  } else {
-      res.status(422)
-      res.send("ID inválido")
-  }
-  } catch (error) {
-    res.status(500);
-    res.send(error.message);
+    console.error("Erro ao excluir paciente:", error);
+    res.status(500).send({ error: error.message });
   }
 }
 
 module.exports = {
   getPacientes,
-  getPaciente,
-  postPaciente,
-  patchPaciente,
+  getPacienteById,
+  createPaciente,
+  updatePaciente,
   deletePaciente,
 };
