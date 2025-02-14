@@ -26,10 +26,13 @@ async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
     const pacientes = await getPacientesService({ nome, aniversariantesSemana });
-    res.status(200).json(JSON.parse(safeStringify(pacientes)));
+    if (res.headersSent) {
+      return;
+    }
+
+    res.status(200).json(pacientes);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-
     if (!res.headersSent) {
       return res.status(500).json({ error: error.message });
     }
