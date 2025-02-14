@@ -10,11 +10,17 @@ const {
     try {
       const { paciente, date } = req.query;
       const planners = await getAllPlanners({ paciente, date });
-      res.status(200).send(planners);
+      if (!res.headersSent) {
+        return res.status(200).send(planners);
+      }
     } catch (error) {
-      res.status(500).send(error.message);
+      console.error("Erro ao buscar planners:", error);
+      if (!res.headersSent) {
+        return res.status(500).send(error.message);
+      }
     }
   }
+  
   
   async function getPlannerById(req, res) {
     try {
