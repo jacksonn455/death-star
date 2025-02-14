@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const { google } = require("googleapis");
 const Planner = require("../models/planner");
-const moment = require('moment-timezone');
-require('dotenv').config();
+const moment = require("moment-timezone");
+require("dotenv").config();
 
 async function createPlannerService(data) {
   let newPlanner = null;
@@ -10,13 +10,15 @@ async function createPlannerService(data) {
     const eventId = await addEventToGoogleCalendar(data);
     data.eventId = eventId;
     newPlanner = await Planner.create(data);
-    const collections = await mongoose.connection.db.listCollections().toArray();
-    const isCollectionCreated = collections.some(collection => collection.name === 'planners');
+    const collections = await mongoose.connection.db
+      .listCollections()
+      .toArray();
+    const isCollectionCreated = collections.some(
+      (collection) => collection.name === "planners"
+    );
 
     if (isCollectionCreated) {
-
     } else {
-
     }
 
     return newPlanner;
@@ -35,7 +37,7 @@ async function addEventToGoogleCalendar(eventData) {
       private_key: process.env.GOOGLE_PRIVATE_KEY,
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
     },
-    scopes: ['https://www.googleapis.com/auth/calendar'],
+    scopes: ["https://www.googleapis.com/auth/calendar"],
   });
 
   const calendar = google.calendar({ version: "v3", auth });
@@ -84,37 +86,37 @@ async function getAllPlanners(query) {
   try {
     const filters = {};
     const now = moment().tz("America/Sao_Paulo");
-    console.log("Hora atual (Brasília):", now.format("YYYY-MM-DD HH:mm:ss"));
 
     if (query?.paciente) {
-      filters.paciente = { $regex: query.paciente, $options: 'i' };
-      console.log("Filtro paciente aplicado:", filters.paciente);
+      filters.paciente = { $regex: query.paciente, $options: "i" };
     }
 
     if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo", true);
+      const date = moment(query.date, "YYYY-MM-DD").tz(
+        "America/Sao_Paulo",
+        true
+      );
       filters.date = date.format("YYYY-MM-DD");
-      console.log("Filtro data aplicado:", filters.date);
 
-      if (date.isSame(now, 'day')) {
+      if (date.isSame(now, "day")) {
         filters.time = { $gte: now.format("HH:mm") };
-        console.log("Filtro hora aplicado para o mesmo dia:", filters.time);
       }
     }
 
     if (query?.week) {
-      const startOfWeek = moment().startOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
-      const endOfWeek = moment().endOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
+      const startOfWeek = moment()
+        .startOf("week")
+        .tz("America/Sao_Paulo")
+        .format("YYYY-MM-DD");
+      const endOfWeek = moment()
+        .endOf("week")
+        .tz("America/Sao_Paulo")
+        .format("YYYY-MM-DD");
       filters.date = { $gte: startOfWeek, $lte: endOfWeek };
-      console.log("Filtro para a semana:", filters.date);
     }
-
-    console.log("Filtros finais para a consulta:", filters);
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
 
-    console.log("Agendamentos encontrados:", planners);
-    
     return planners;
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);
@@ -140,7 +142,9 @@ async function updatePlannerService(id, data) {
     }
 
     if (!planner.eventId) {
-      console.error(`Evento do Google Calendar não encontrado para o agendamento ${id}.`);
+      console.error(
+        `Evento do Google Calendar não encontrado para o agendamento ${id}.`
+      );
       throw new Error("Evento no Google Calendar não encontrado.");
     }
 
@@ -236,12 +240,16 @@ async function deletePlannerService(id) {
   try {
     const planner = await Planner.findById(id);
     if (!planner) {
-      console.error(`Agendamento com ID ${id} não encontrado no banco de dados.`);
+      console.error(
+        `Agendamento com ID ${id} não encontrado no banco de dados.`
+      );
       throw new Error("Agendamento não encontrado.");
     }
 
     if (!planner.eventId) {
-      console.error(`Evento do Google Calendar não encontrado para o agendamento ${id}.`);
+      console.error(
+        `Evento do Google Calendar não encontrado para o agendamento ${id}.`
+      );
       throw new Error("Evento no Google Calendar não encontrado.");
     }
 
