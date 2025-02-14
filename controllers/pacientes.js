@@ -50,21 +50,7 @@ async function createPaciente(req, res) {
     const requiredFields = [
       "nome",
       "idade",
-      "genero",
-      "telefone",
-      "email",
       "dataNascimento",
-      "tabagista",
-      "alcool",
-      "covid",
-      "suplementacao",
-      "refeicoes",
-      "carne",
-      "lanches",
-      "refrigerante",
-      "frutas",
-      "leite",
-      "madrugada",
     ];
 
     for (const field of requiredFields) {

@@ -21,44 +21,9 @@ const validatePacienteData = [
   body("idade")
     .isInt({ min: 0 })
     .withMessage("Idade deve ser um número inteiro maior ou igual a 0"),
-  body("genero").isString().notEmpty().withMessage("Gênero é obrigatório"),
-  body("telefone").isString().notEmpty().withMessage("Telefone é obrigatório"),
-  body("email").isEmail().withMessage("Email deve ser válido"),
   body("dataNascimento")
     .isDate()
-    .withMessage("Data de nascimento deve ser válida"),
-  body("tabagista")
-    .isBoolean()
-    .withMessage("Campo 'tabagista' deve ser um valor booleano"),
-  body("alcool")
-    .isBoolean()
-    .withMessage("Campo 'alcool' deve ser um valor booleano"),
-  body("covid")
-    .isBoolean()
-    .withMessage("Campo 'covid' deve ser um valor booleano"),
-  body("suplementacao")
-    .isString()
-    .notEmpty()
-    .withMessage("Suplementação é obrigatória"),
-  body("refeicoes")
-    .isString()
-    .notEmpty()
-    .withMessage("Refeições são obrigatórias"),
-  body("carne")
-    .isString()
-    .notEmpty()
-    .withMessage("Tipo de carne é obrigatório"),
-  body("lanches").isString().notEmpty().withMessage("Lanches são obrigatórios"),
-  body("refrigerante")
-    .isString()
-    .notEmpty()
-    .withMessage("Refrigerante é obrigatório"),
-  body("frutas").isString().notEmpty().withMessage("Frutas são obrigatórias"),
-  body("leite").isString().notEmpty().withMessage("Leite é obrigatório"),
-  body("madrugada")
-    .isString()
-    .notEmpty()
-    .withMessage("Madrugada é obrigatório"),
+    .withMessage("Data de nascimento deve ser válida")
 ];
 
 const validateId = [param("id").isMongoId().withMessage("ID inválido")];
