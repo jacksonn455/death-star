@@ -19,34 +19,48 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS não permitido para esta origem.'));
+      console.error(`Bloqueado por CORS: ${origin}`);
+      callback(new Error("CORS não permitido para esta origem."));
     }
   },
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+  credentials: true
 }));
 
 const port = process.env.PORT || 8000;
 
 const startServer = async () => {
   if (!process.env.MONGO_URI) {
-    console.error("Erro: MONGO_URI não está configurado.");
+    console.error("❌ Erro: MONGO_URI não está configurado.");
     process.exit(1);
   }
 
   try {
     await dbConnect();
-    app.use("/pacientes", authMiddleware, rotaPacientes); 
+    console.log("✅ Banco de dados conectado!");
+    app.use((req, res, next) => {
+      res.setTimeout(15000, () => {
+        console.error("⏳ Tempo limite atingido para", req.originalUrl);
+        res.status(504).json({ error: "Tempo limite da requisição atingido." });
+      });
+      next();
+    });
+
+    app.use("/pacientes", authMiddleware, rotaPacientes);
     app.use("/agenda", authMiddleware, rotaAgendamento);
     app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
 
     app.listen(port, () => {
-      console.log(`Servidor ouvindo na porta ${port}`);
+      console.log(`🚀 Servidor rodando na porta ${port}`);
     });
+
   } catch (error) {
-    console.error("Falha ao iniciar o servidor:", error.message);
+    console.error("❌ Falha ao iniciar o servidor:", error.message);
     process.exit(1);
   }
 };

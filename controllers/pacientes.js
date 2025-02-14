@@ -10,7 +10,6 @@ const {
 async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
-    console.log("Query recebida:", req.query);
     const pacientes = await getPacientesService({ nome, aniversariantesSemana });
     res.status(200).json(pacientes);
   } catch (error) {
