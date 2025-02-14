@@ -1,31 +1,38 @@
 const Paciente = require("../models/pacientes");
+const moment = require("moment-timezone");
 
 async function getPacientesService(query) {
   try {
     const filters = {};
+    const now = moment().tz("America/Sao_Paulo");
+
+    if (query?.aniversariantesSemana) {
+      const startOfWeek = moment().startOf("week").tz("America/Sao_Paulo");
+      const endOfWeek = moment().endOf("week").tz("America/Sao_Paulo");
+
+      filters.dataNascimento = {
+        $gte: startOfWeek.startOf("day").format("YYYY-MM-DD"),
+        $lte: endOfWeek.endOf("day").format("YYYY-MM-DD"),
+      };
+    }
 
     if (query?.nome) {
       filters.nome = { $regex: query.nome, $options: "i" };
     }
 
-    if (query?.genero) {
-      filters.genero = query.genero;
-    }
-
-    if (query?.idade) {
-      filters.idade = { $gte: query.idade };
+    if (query?.dataNascimento) {
+      filters.dataNascimento = query.dataNascimento;
     }
 
     const pacientes = await Paciente.find(filters).sort({ nome: 1 });
 
-    if (!pacientes || pacientes.length === 0) {
-      throw new Error("Nenhum paciente encontrado.");
+    if (!pacientes) {
+      return [];
     }
 
     return pacientes;
   } catch (error) {
-    console.error("Erro ao buscar pacientes:", error);
-    throw new Error("Erro ao buscar pacientes.");
+    return [];
   }
 }
 
