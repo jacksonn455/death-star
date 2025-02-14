@@ -92,7 +92,7 @@ async function getAllPlanners(query) {
     }
 
     if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo");
+      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo", true);
       filters.date = date.format("YYYY-MM-DD");
       console.log("Filtro data aplicado:", filters.date);
 
