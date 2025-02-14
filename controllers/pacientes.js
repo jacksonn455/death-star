@@ -11,10 +11,10 @@ async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
     const pacientes = await getPacientesService({ nome, aniversariantesSemana });
-    res.status(200).json(pacientes);
+    return res.status(200).json(pacientes);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
 
