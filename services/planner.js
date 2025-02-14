@@ -84,29 +84,37 @@ async function getAllPlanners(query) {
   try {
     const filters = {};
     const now = moment().tz("America/Sao_Paulo");
+    console.log("Hora atual (Brasília):", now.format("YYYY-MM-DD HH:mm:ss"));
 
     if (query?.paciente) {
       filters.paciente = { $regex: query.paciente, $options: 'i' };
+      console.log("Filtro paciente aplicado:", filters.paciente);
     }
 
     if (query?.date) {
       const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo");
       filters.date = date.format("YYYY-MM-DD");
+      console.log("Filtro data aplicado:", filters.date);
 
       if (date.isSame(now, 'day')) {
         filters.time = { $gte: now.format("HH:mm") };
+        console.log("Filtro hora aplicado para o mesmo dia:", filters.time);
       }
     }
 
     if (query?.week) {
       const startOfWeek = moment().startOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
       const endOfWeek = moment().endOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
-
       filters.date = { $gte: startOfWeek, $lte: endOfWeek };
+      console.log("Filtro para a semana:", filters.date);
     }
+
+    console.log("Filtros finais para a consulta:", filters);
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
 
+    console.log("Agendamentos encontrados:", planners);
+    
     return planners;
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);
