@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const {
-  getAllPacientes,
+  getPacientesService,
   getPacienteByIdService,
   createPacienteService,
   updatePacienteService,
@@ -9,12 +9,12 @@ const {
 
 async function getPacientes(req, res) {
   try {
-    const { nome, genero, idade } = req.query;
-    const pacientes = await getAllPacientes({ nome, genero, idade });
-    res.status(200).send(pacientes);
+    const { nome } = req.query || {}; 
+    const pacientes = await getPacientesService({ nome });
+    res.status(200).json(pacientes);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-    res.status(500).send({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 }
 

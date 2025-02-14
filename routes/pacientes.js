@@ -30,8 +30,7 @@ const validateId = [param("id").isMongoId().withMessage("ID inválido")];
 
 router.get("/", async (req, res) => {
   try {
-    const { nome, genero, idade } = req.query;
-    const pacientes = await getPacientes({ nome, genero, idade });
+    const pacientes = await getPacientes(req, res);
     res.status(200).json(pacientes);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);

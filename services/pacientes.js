@@ -16,7 +16,13 @@ async function getPacientesService(query) {
       filters.idade = { $gte: query.idade };
     }
 
-    return await Paciente.find(filters).sort({ nome: 1 });
+    const pacientes = await Paciente.find(filters).sort({ nome: 1 });
+
+    if (!pacientes || pacientes.length === 0) {
+      throw new Error("Nenhum paciente encontrado.");
+    }
+
+    return pacientes;
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
     throw new Error("Erro ao buscar pacientes.");
