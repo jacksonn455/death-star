@@ -7,17 +7,29 @@ const {
   deletePacienteService,
 } = require("../services/pacientes");
 
+function safeStringify(obj) {
+  const cache = new Set();
+  const str = JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return;
+      }
+      cache.add(value);
+    }
+    return value;
+  });
+  cache.clear();
+  return str;
+}
+
 async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
     const pacientes = await getPacientesService({ nome, aniversariantesSemana });
-    
-    if (!res.headersSent) {
-      return res.status(200).json(pacientes);
-    }
+    res.status(200).json(JSON.parse(safeStringify(pacientes)));
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-    
+
     if (!res.headersSent) {
       return res.status(500).json({ error: error.message });
     }
