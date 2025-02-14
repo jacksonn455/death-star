@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { google } = require("googleapis");
 const Planner = require("../models/planner");
-const moment = require("moment");
+const moment = require('moment-timezone');
 require('dotenv').config();
 
 async function createPlannerService(data) {
@@ -83,15 +83,14 @@ async function addEventToGoogleCalendar(eventData) {
 async function getAllPlanners(query) {
   try {
     const filters = {};
+    const now = moment().tz("America/Sao_Paulo");
 
     if (query?.paciente) {
       filters.paciente = { $regex: query.paciente, $options: 'i' };
     }
 
     if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD");
-      const now = moment();
-
+      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo");
       filters.date = date.format("YYYY-MM-DD");
 
       if (date.isSame(now, 'day')) {
@@ -100,8 +99,8 @@ async function getAllPlanners(query) {
     }
 
     if (query?.week) {
-      const startOfWeek = moment().startOf('week').format("YYYY-MM-DD");
-      const endOfWeek = moment().endOf('week').format("YYYY-MM-DD");
+      const startOfWeek = moment().startOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
+      const endOfWeek = moment().endOf('week').tz("America/Sao_Paulo").format("YYYY-MM-DD");
 
       filters.date = { $gte: startOfWeek, $lte: endOfWeek };
     }
