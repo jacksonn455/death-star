@@ -74,6 +74,7 @@ const PacienteSchema = new mongoose.Schema({
   ansiedade: { type: String },
   nervosismo: { type: String },
   exercicio: { type: String },
+  image: { type: String, required: false },
 });
 
 const Paciente = mongoose.model("Paciente", PacienteSchema);

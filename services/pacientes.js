@@ -1,4 +1,6 @@
 const Paciente = require("../models/pacientes");
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 const moment = require("moment-timezone");
 
 async function getPacientesService(query) {
@@ -45,14 +47,52 @@ async function getPacienteByIdService(id) {
   }
 }
 
+const uploadImageToCloudinary = (imageFile) => {
+  return new Promise((resolve, reject) => {
+    if (!imageFile || !imageFile.buffer) {
+      console.error("❌ Erro: Nenhum arquivo válido recebido.");
+      return reject(new Error("Nenhum arquivo válido recebido."));
+    }
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "pacientes",
+        resource_type: "auto",
+        use_filename: true,
+        unique_filename: false,
+        overwrite: true,
+        format: "png",
+        transformation: [
+          { width: 500, height: 500, crop: "limit" },
+          { quality: "auto" },
+        ],
+      },
+      (error, result) => {
+        if (error) {
+          console.error("❌ Erro ao fazer upload da imagem:", error);
+          return reject(new Error("Erro ao fazer upload da imagem no Cloudinary."));
+        }
+        resolve(result.secure_url);
+      }
+    );
+
+    streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
+  });
+};
+
 async function createPacienteService(pacienteData) {
   try {
     if (!pacienteData || Object.keys(pacienteData).length === 0) {
       throw new Error("Dados de paciente inválidos.");
     }
 
-    const newPaciente = await new Paciente(pacienteData).save();
-    return newPaciente;
+    if (pacienteData.imagem) {
+      if (typeof pacienteData.imagem !== "string") {
+        pacienteData.imagem = await uploadImageToCloudinary(pacienteData.imagem);
+      }
+    }
+
+    return await new Paciente(pacienteData).save();
   } catch (error) {
     console.error("Erro ao criar paciente:", error);
     throw new Error("Erro ao criar paciente.");
@@ -64,6 +104,12 @@ async function updatePacienteService(id, updatedData) {
     const existingPaciente = await Paciente.findById(id);
     if (!existingPaciente) {
       throw new Error("Paciente não encontrado.");
+    }
+
+    if (updatedData.imagem && typeof updatedData.imagem !== "string") {
+      updatedData.imagem = await uploadImageToCloudinary(updatedData.imagem);
+    } else {
+      updatedData.imagem = existingPaciente.imagem;
     }
 
     return await Paciente.findByIdAndUpdate(id, updatedData, { new: true });

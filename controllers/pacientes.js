@@ -7,21 +7,6 @@ const {
   deletePacienteService,
 } = require("../services/pacientes");
 
-function safeStringify(obj) {
-  const cache = new Set();
-  const str = JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        return;
-      }
-      cache.add(value);
-    }
-    return value;
-  });
-  cache.clear();
-  return str;
-}
-
 async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
