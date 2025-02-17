@@ -8,6 +8,8 @@ const {
 } = require("../controllers/pacientes");
 const { body, param, validationResult } = require("express-validator");
 const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -55,12 +57,9 @@ router.get("/:id", validateId, async (req, res) => {
   }
 });
 
-router.post("/", upload.single("imagem"), validatePacienteData, async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const pacienteData = req.body;
-    const imageFile = req.file;
-    
-    const newPaciente = await createPacienteService(pacienteData, imageFile);
+    const newPaciente = await createPaciente(req, res);
     res.status(201).json(newPaciente);
   } catch (error) {
     console.error("Erro ao criar paciente:", error);

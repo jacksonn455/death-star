@@ -6,6 +6,7 @@ const {
   updatePacienteService,
   deletePacienteService,
 } = require("../services/pacientes");
+const cloudinary = require('../config/cloudinary');
 
 async function getPacientes(req, res) {
   try {
@@ -38,28 +39,40 @@ async function getPacienteById(req, res) {
 
 async function createPaciente(req, res) {
   try {
-    if (!req || !res) {
-      throw new Error("Requisição ou resposta não definida.");
-    }
-
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).send("Nenhum dado foi enviado.");
-    }
-
     const pacienteData = req.body;
-    const requiredFields = [
-      "nome",
-      "idade",
-      "dataNascimento",
-    ];
+    const requiredFields = ["nome", "idade", "dataNascimento"];
 
     for (const field of requiredFields) {
-      if (pacienteData[field] === undefined) {
+      if (!pacienteData[field]) {
         return res.status(400).send(`O campo "${field}" é obrigatório.`);
       }
     }
 
-    const newPaciente = await createPacienteService(pacienteData);
+    let image = null;
+    if (pacienteData.fotos) {
+      const base64Data = pacienteData.fotos.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: "pacientes" }, (error, result) => {
+            if (error) {
+              console.error("Erro ao fazer upload da imagem para o Cloudinary:", error);
+              reject(error);
+            }
+            resolve(result);
+          })
+          .end(buffer);
+      });
+
+      image = uploadResult.secure_url;
+    }
+
+    const newPaciente = await createPacienteService({
+      ...pacienteData,
+      image: image,
+    });
+
     res.status(201).json(newPaciente);
   } catch (error) {
     console.error("Erro ao criar paciente:", error);
