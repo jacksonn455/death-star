@@ -7,7 +7,7 @@ const {
   deletePaciente,
 } = require("../controllers/pacientes");
 const { body, param, validationResult } = require("express-validator");
-const mongoose = require("mongoose");
+const multer = require("multer");
 
 const router = express.Router();
 
@@ -55,15 +55,18 @@ router.get("/:id", validateId, async (req, res) => {
   }
 });
 
-router.post("/", validatePacienteData, async (req, res) => {
-    try {
-      const newPaciente = await createPaciente(req, res);
-      res.status(201).json(newPaciente);
-    } catch (error) {
-      console.error("Erro ao criar paciente:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
+router.post("/", upload.single("imagem"), validatePacienteData, async (req, res) => {
+  try {
+    const pacienteData = req.body;
+    const imageFile = req.file;
+    
+    const newPaciente = await createPacienteService(pacienteData, imageFile);
+    res.status(201).json(newPaciente);
+  } catch (error) {
+    console.error("Erro ao criar paciente:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.put("/:id", [validateId, validatePacienteData], async (req, res) => {
   const errors = validationResult(req);

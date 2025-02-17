@@ -80,16 +80,14 @@ const uploadImageToCloudinary = (imageFile) => {
   });
 };
 
-async function createPacienteService(pacienteData) {
+async function createPacienteService(pacienteData, imageFile) {
   try {
     if (!pacienteData || Object.keys(pacienteData).length === 0) {
       throw new Error("Dados de paciente inválidos.");
     }
 
-    if (pacienteData.imagem) {
-      if (typeof pacienteData.imagem !== "string") {
-        pacienteData.imagem = await uploadImageToCloudinary(pacienteData.imagem);
-      }
+    if (imageFile) {
+      pacienteData.imagem = await uploadImageToCloudinary(imageFile);
     }
 
     return await new Paciente(pacienteData).save();
