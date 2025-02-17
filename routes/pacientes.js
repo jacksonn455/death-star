@@ -57,12 +57,55 @@ router.get("/:id", validateId, async (req, res) => {
   }
 });
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', upload.single('image'), validatePacienteData, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const newPaciente = await createPaciente(req, res);
+    let image = null;
+
+    if (req.file) {
+      const uploadFromBuffer = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "pacientes",
+              resource_type: "auto",
+              use_filename: true,
+              unique_filename: false,
+              overwrite: true,
+              format: "png",
+              transformation: [
+                { width: 500, height: 500, crop: "limit" },
+                { quality: "auto" },
+              ],
+            },
+            (error, result) => {
+              if (error) {
+                console.error("❌ Erro no upload para o Cloudinary:", error);
+                return reject(error);
+              }
+
+              resolve(result.secure_url);
+            }
+          );
+
+          streamifier.createReadStream(buffer).pipe(uploadStream);
+        });
+      };
+
+      image = await uploadFromBuffer(req.file.buffer);
+    } else {
+      image = null;
+    }
+
+    const newPaciente = await createPacienteService({ ...req.body, image });
+
     res.status(201).json(newPaciente);
   } catch (error) {
-    console.error("Erro ao criar paciente:", error);
+    console.error("❌ Erro ao criar paciente:", error);
     res.status(500).json({ error: error.message });
   }
 });

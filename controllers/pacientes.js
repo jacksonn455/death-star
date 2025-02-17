@@ -6,12 +6,15 @@ const {
   updatePacienteService,
   deletePacienteService,
 } = require("../services/pacientes");
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require("../config/cloudinary");
 
 async function getPacientes(req, res) {
   try {
     const { nome, aniversariantesSemana } = req.query || {};
-    const pacientes = await getPacientesService({ nome, aniversariantesSemana });
+    const pacientes = await getPacientesService({
+      nome,
+      aniversariantesSemana,
+    });
     return pacientes;
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
@@ -49,27 +52,36 @@ async function createPaciente(req, res) {
     }
 
     let image = null;
-    if (pacienteData.fotos) {
-      const base64Data = pacienteData.fotos.replace(/^data:image\/\w+;base64,/, "");
-      const buffer = Buffer.from(base64Data, "base64");
+    if (req.file) {
+      const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedFileTypes.includes(req.file.mimetype)) {
+        return res
+          .status(400)
+          .send(
+            "Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos."
+          );
+      }
 
       const uploadResult = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream({ folder: "pacientes" }, (error, result) => {
             if (error) {
-              console.error("Erro ao fazer upload da imagem para o Cloudinary:", error);
+              console.error(
+                "Erro ao fazer upload da imagem para o Cloudinary:",
+                error
+              );
               reject(error);
             }
             resolve(result);
           })
-          .end(buffer);
+          .end(req.file.buffer);
       });
 
       image = uploadResult.secure_url;
     }
 
     const newPaciente = await createPacienteService({
-      ...pacienteData,
+      ...req.body,
       image: image,
     });
 

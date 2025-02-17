@@ -90,7 +90,8 @@ async function createPacienteService(pacienteData, imageFile) {
       pacienteData.imagem = await uploadImageToCloudinary(imageFile);
     }
 
-    return await new Paciente(pacienteData).save();
+    const newPaciente = await new Paciente(pacienteData).save();
+    return newPaciente;
   } catch (error) {
     console.error("Erro ao criar paciente:", error);
     throw new Error("Erro ao criar paciente.");
