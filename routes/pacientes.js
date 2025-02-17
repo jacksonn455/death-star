@@ -5,13 +5,12 @@ const {
   updatePaciente,
   deletePaciente,
 } = require("../controllers/pacientes");
-const {
-  createPacienteService
-} = require("../services/pacientes");
+const { createPacienteService } = require("../services/pacientes");
 const { body, param, validationResult } = require("express-validator");
 const multer = require("multer");
 const router = express.Router();
 const storage = multer.memoryStorage();
+const upload = multer({ storage });
 router.use(express.json());
 
 const validatePacienteData = [
@@ -24,22 +23,10 @@ const validatePacienteData = [
     .withMessage("Idade deve ser um número inteiro maior ou igual a 0"),
   body("dataNascimento")
     .isDate()
-    .withMessage("Data de nascimento deve ser válida")
+    .withMessage("Data de nascimento deve ser válida"),
 ];
 
 const validateId = [param("id").isMongoId().withMessage("ID inválido")];
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error("Tipo de arquivo não permitido"), false);
-    }
-    cb(null, true);
-  }
-}).single('image');
 
 router.get("/", async (req, res) => {
   try {
@@ -68,62 +55,67 @@ router.get("/:id", validateId, async (req, res) => {
   }
 });
 
-router.post('/', upload.single('image'), validatePacienteData, async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  if (req.fileValidationError) {
-    return res.status(400).json({ error: req.fileValidationError });
-  }
-
-  try {
-    let image = null;
-
-    if (req.file) {
-      const uploadFromBuffer = (buffer) => {
-        return new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "pacientes",
-              resource_type: "auto",
-              use_filename: true,
-              unique_filename: false,
-              overwrite: true,
-              format: "png",
-              transformation: [
-                { width: 500, height: 500, crop: "limit" },
-                { quality: "auto" },
-              ],
-            },
-            (error, result) => {
-              if (error) {
-                console.error("❌ Erro no upload para o Cloudinary:", error);
-                return reject(error);
-              }
-
-              resolve(result.secure_url);
-            }
-          );
-
-          streamifier.createReadStream(buffer).pipe(uploadStream);
-        });
-      };
-
-      image = await uploadFromBuffer(req.file.buffer);
-    } else {
-      image = null;
+router.post(
+  "/",
+  upload.single("image"),
+  validatePacienteData,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const newPaciente = await createPacienteService({ ...req.body, image });
+    if (req.fileValidationError) {
+      return res.status(400).json({ error: req.fileValidationError });
+    }
 
-    res.status(201).json(newPaciente);
-  } catch (error) {
-    console.error("❌ Erro ao criar paciente:", error);
-    res.status(500).json({ error: error.message });
+    try {
+      let image = null;
+
+      if (req.file) {
+        const uploadFromBuffer = (buffer) => {
+          return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+              {
+                folder: "pacientes",
+                resource_type: "auto",
+                use_filename: true,
+                unique_filename: false,
+                overwrite: true,
+                format: "png",
+                transformation: [
+                  { width: 500, height: 500, crop: "limit" },
+                  { quality: "auto" },
+                ],
+              },
+              (error, result) => {
+                if (error) {
+                  console.error("❌ Erro no upload para o Cloudinary:", error);
+                  return reject(error);
+                }
+
+                resolve(result.secure_url);
+              }
+            );
+
+            streamifier.createReadStream(buffer).pipe(uploadStream);
+          });
+        };
+
+        image = await uploadFromBuffer(req.file.buffer);
+      } else {
+        image = null;
+      }
+
+      const newPaciente = await createPacienteService({ ...req.body, image });
+
+      res.status(201).json(newPaciente);
+    } catch (error) {
+      console.error("❌ Erro ao criar paciente:", error);
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 
 router.put("/:id", [validateId, validatePacienteData], async (req, res) => {
   const errors = validationResult(req);
