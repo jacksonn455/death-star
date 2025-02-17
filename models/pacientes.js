@@ -58,12 +58,11 @@ const PacienteSchema = new mongoose.Schema({
     preAgendamento: { type: String },
     horario: { type: String },
   },
-  contratoAssinaturas: [
-    {
-      contratanteAssinatura: { type: String },
-      contratadaAssinatura: { type: String },
-    },
-  ],
+  contratoAssinaturas: [{
+    contratanteAssinatura: String,
+    contratadaAssinatura: String,
+    data: Date,
+  }],
   patologias: [{ type: String }],
   funcionamentoIntestinal: { type: String },
   gestante: { type: String },
