@@ -107,12 +107,12 @@ async function getAllPlanners(query) {
       const startOfWeek = moment()
         .startOf("week")
         .tz("America/Sao_Paulo")
-        .format("YYYY-MM-DD");
-      const endOfWeek = moment()
-        .endOf("week")
-        .tz("America/Sao_Paulo")
-        .format("YYYY-MM-DD");
-      filters.date = { $gte: startOfWeek, $lte: endOfWeek };
+        .toDate();
+
+      const endOfWeek = moment().endOf("week").tz("America/Sao_Paulo").toDate();
+      const startOfWeekStr = moment(startOfWeek).format("YYYY-MM-DD");
+      const endOfWeekStr = moment(endOfWeek).format("YYYY-MM-DD");
+      filters.date = { $gte: startOfWeekStr, $lte: endOfWeekStr };
     }
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });

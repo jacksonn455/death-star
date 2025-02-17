@@ -22,8 +22,8 @@ const validateId = [
 
 router.get("/", async (req, res) => {
   try {
-    const { paciente, date } = req.query;
-    const planners = await getAllPlanners({ paciente, date });
+    const { paciente, date, week } = req.query;
+    const planners = await getAllPlanners({ paciente, date, week });
     res.json(planners);
   } catch (error) {
     res.status(500).json({ error: error.message });
