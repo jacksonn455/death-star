@@ -13,6 +13,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 router.use(express.json());
 const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 
 const validatePacienteData = [
   body("nome")
