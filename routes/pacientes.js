@@ -2,10 +2,12 @@ const express = require("express");
 const {
   getPacientes,
   getPacienteById,
-  createPaciente,
   updatePaciente,
   deletePaciente,
 } = require("../controllers/pacientes");
+const {
+  createPacienteService
+} = require("../services/pacientes");
 const { body, param, validationResult } = require("express-validator");
 const multer = require("multer");
 const storage = multer.memoryStorage();
