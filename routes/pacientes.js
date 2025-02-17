@@ -12,6 +12,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 router.use(express.json());
+const cloudinary = require("../config/cloudinary");
 
 const validatePacienteData = [
   body("nome")
