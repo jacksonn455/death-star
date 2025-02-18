@@ -25,18 +25,28 @@ async function getPacientes(req, res) {
 async function getPacienteById(req, res) {
   try {
     const id = req.params.id;
+
     if (id && mongoose.Types.ObjectId.isValid(id)) {
       const paciente = await getPacienteByIdService(id);
+
       if (!paciente) {
         return res.status(404).send("Paciente não encontrado.");
       }
-      res.status(200).send(paciente);
+
+      if (!res.headersSent) {
+        res.status(200).send(paciente);
+      } else {
+      }
     } else {
-      res.status(422).send("ID inválido");
+      if (!res.headersSent) {
+        return res.status(422).send("ID inválido");
+      }
     }
   } catch (error) {
     console.error("Erro ao buscar paciente por ID:", error);
-    res.status(500).send({ error: error.message });
+    if (!res.headersSent) {
+      res.status(500).send({ error: error.message });
+    }
   }
 }
 

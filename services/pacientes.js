@@ -40,7 +40,8 @@ async function getPacientesService(query) {
 
 async function getPacienteByIdService(id) {
   try {
-    return await Paciente.findById(id);
+    const paciente = await Paciente.findById(id);
+    return paciente;
   } catch (error) {
     console.error("Erro ao buscar paciente:", error);
     throw new Error("Erro ao buscar paciente.");

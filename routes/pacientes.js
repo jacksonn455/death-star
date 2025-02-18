@@ -43,17 +43,23 @@ router.get("/", async (req, res) => {
 router.get("/:id", validateId, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-  try {
-    const paciente = await getPacienteById(req.params.id);
-    if (!paciente) {
-      return res.status(404).json({ error: "Paciente não encontrado." });
+    if (!res.headersSent) {
+      return res.status(400).json({ errors: errors.array() });
     }
-    res.status(200).json(paciente);
+  }
+
+  try {
+    const paciente = await getPacienteById(req, res);
+    if (!paciente) {
+      if (!res.headersSent) {
+        return res.status(404).json({ error: "Paciente não encontrado." });
+      }
+    }
   } catch (error) {
     console.error("Erro ao buscar paciente:", error);
-    res.status(500).json({ error: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
