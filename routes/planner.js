@@ -48,15 +48,26 @@ router.get("/:id", validateId, handleValidationErrors, async (req, res) => {
   }
 });
 
-router.post("/", validatePlannerData, handleValidationErrors, async (req, res) => {
+router.post("/", validatePlannerData, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const newPlanner = await createPlannerService(req.body);
     res.status(201).json(newPlanner);
   } catch (error) {
-    console.error("Erro ao criar agendamento:", error);
-    res.status(500).json({ error: error.message || "Erro interno do servidor" });
+    console.error("Erro ao criar agendamento:", error.message);
+
+    if (error.message.includes("Já existe um agendamento")) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Erro interno no servidor." });
   }
 });
+
 
 router.put("/:id", [validateId, validatePlannerData], handleValidationErrors, async (req, res) => {
   try {
