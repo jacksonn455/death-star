@@ -7,27 +7,31 @@ require("dotenv").config();
 async function createPlannerService(data) {
   let newPlanner = null;
   try {
+    const existingPlanner = await Planner.findOne({
+      date: data.date,
+      time: data.time,
+    });
+
+    if (existingPlanner) {
+      throw new Error(
+        "Já existe um agendamento para essa data e horário. Escolha outro horário."
+      );
+    }
+
     const eventId = await addEventToGoogleCalendar(data);
     data.eventId = eventId;
-    newPlanner = await Planner.create(data);
-    const collections = await mongoose.connection.db
-      .listCollections()
-      .toArray();
-    const isCollectionCreated = collections.some(
-      (collection) => collection.name === "planners"
-    );
 
-    if (isCollectionCreated) {
-    } else {
-    }
+    newPlanner = await Planner.create(data);
 
     return newPlanner;
   } catch (error) {
     console.error("Erro ao criar agendamento:", error);
+    
     if (newPlanner) {
       await Planner.deleteOne({ _id: newPlanner._id });
     }
-    throw new Error("Erro ao criar agendamento.");
+
+    throw new Error(error.message || "Erro ao criar agendamento.");
   }
 }
 
