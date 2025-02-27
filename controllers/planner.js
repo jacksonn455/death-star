@@ -8,8 +8,8 @@ const {
   
   async function getPlanners(req, res) {
     try {
-      const { paciente, date, week } = req.query;
-      const planners = await getAllPlanners({ paciente, date, week });
+      const { paciente, date, week, weeks } = req.query;
+      const planners = await getAllPlanners({ paciente, date, week, weeks });
       if (!res.headersSent) {
         return res.status(200).send(planners);
       }

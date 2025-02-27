@@ -28,8 +28,8 @@ const handleValidationErrors = (req, res, next) => {
 
 router.get("/", async (req, res) => {
   try {
-    const { paciente, date, week } = req.query;
-    const planners = await getAllPlanners({ paciente, date, week });
+    const { paciente, date, week, weeks } = req.query;
+    const planners = await getAllPlanners({ paciente, date, week, weeks });
     res.json(planners);
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);

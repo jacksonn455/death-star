@@ -96,10 +96,7 @@ async function getAllPlanners(query) {
     }
 
     if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD").tz(
-        "America/Sao_Paulo",
-        true
-      );
+      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo", true);
       filters.date = date.format("YYYY-MM-DD");
 
       if (date.isSame(now, "day")) {
@@ -107,16 +104,15 @@ async function getAllPlanners(query) {
       }
     }
 
-    if (query?.week) {
-      const startOfWeek = moment()
-        .startOf("week")
-        .tz("America/Sao_Paulo")
-        .toDate();
+    if (query?.week !== undefined) {
+      const weekOffset = parseInt(query.week) || 0;
+      const startOfWeek = moment().startOf("week").add(weekOffset, "weeks").tz("America/Sao_Paulo");
+      const endOfWeek = moment().endOf("week").add(weekOffset, "weeks").tz("America/Sao_Paulo");
 
-      const endOfWeek = moment().endOf("week").tz("America/Sao_Paulo").toDate();
-      const startOfWeekStr = moment(startOfWeek).format("YYYY-MM-DD");
-      const endOfWeekStr = moment(endOfWeek).format("YYYY-MM-DD");
-      filters.date = { $gte: startOfWeekStr, $lte: endOfWeekStr };
+      filters.date = {
+        $gte: startOfWeek.format("YYYY-MM-DD"),
+        $lte: endOfWeek.format("YYYY-MM-DD"),
+      };
     }
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
