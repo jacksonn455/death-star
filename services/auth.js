@@ -1,14 +1,12 @@
 const { User } = require("../models/users");
 const { compare, hash } = require("bcryptjs");
-const { sign } = require("jsonwebtoken");
-const jsonSecret = process.env.JSON_SECRET;
+const { generateToken, generateRefreshToken } = require("../utils/jwt");
+const { validateRequiredFields } = require("../utils/validationUtils");
 
 async function login(dto) {
   const { email, password } = dto;
 
-  if (!email || !password) {
-    throw new Error("Email e senha são obrigatórios");
-  }
+  validateRequiredFields({ email, password }, ["email", "password"]);
 
   const user = await User.findOne({ email });
 
@@ -22,9 +20,23 @@ async function login(dto) {
     throw new Error("Credenciais inválidas");
   }
 
-  const accessToken = sign({ email: user.email, role: user.role }, jsonSecret, {
-    expiresIn: "1h",
-  });
+  const accessToken = generateToken({ email: user.email, role: user.role });
+  const refreshToken = generateRefreshToken({ email: user.email });
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken };
+}
+
+async function refreshToken(token) {
+  const user = await User.findOne({ refreshToken: token });
+
+  if (!user) {
+    throw new Error("Refresh token inválido.");
+  }
+
+  const accessToken = generateToken({ email: user.email, role: user.role });
 
   return accessToken;
 }
@@ -32,9 +44,12 @@ async function login(dto) {
 async function register(dto) {
   const { name, email, password, role } = dto;
 
-  if (!name || !email || !password || !role) {
-    throw new Error("Todos os campos são obrigatórios");
-  }
+  validateRequiredFields({ name, email, password, role }, [
+    "name",
+    "email",
+    "password",
+    "role",
+  ]);
 
   const existingUser = await User.findOne({ email });
 
@@ -58,5 +73,6 @@ async function register(dto) {
 
 module.exports = {
   login,
+  refreshToken,
   register,
 };

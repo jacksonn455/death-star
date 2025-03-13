@@ -1,35 +1,36 @@
 const { login, register } = require("../services/auth");
+const { validateRequiredFields } = require("../utils/validationUtils");
 
-async function loginController(req, res) {
+async function loginController(req, res, next) {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email e senha são obrigatórios" });
-    }
+    validateRequiredFields({ email, password }, ["email", "password"]);
 
-    const token = await login({ email, password });
-    res.status(200).json({ token });
+    const { accessToken, refreshToken } = await login({ email, password });
+
+    res.status(200).json({ accessToken, refreshToken });
   } catch (error) {
-    console.error(error);
-    res.status(401).json({ message: error.message });
+    next(error);
   }
 }
 
-async function registerController(req, res) {
+async function registerController(req, res, next) {
   try {
     const { name, email, password, role } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "Todos os campos são obrigatórios" });
-    }
+    validateRequiredFields({ name, email, password, role }, [
+      "name",
+      "email",
+      "password",
+      "role",
+    ]);
 
     const response = await register({ name, email, password, role });
 
     res.status(201).json(response);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 }
 

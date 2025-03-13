@@ -3,9 +3,8 @@ const {
   getPacientes,
   getPacienteById,
   updatePaciente,
-  deletePaciente,
 } = require("../controllers/pacientes");
-const { createPacienteService } = require("../services/pacientes");
+const { createPacienteService, deletePacienteService } = require("../services/pacientes");
 const { body, param, validationResult } = require("express-validator");
 const multer = require("multer");
 const router = express.Router();
@@ -14,19 +13,7 @@ const upload = multer({ storage });
 router.use(express.json());
 const cloudinary = require("../config/cloudinary");
 const streamifier = require("streamifier");
-
-const validatePacienteData = [
-  body("nome")
-    .isString()
-    .notEmpty()
-    .withMessage("Nome do paciente é obrigatório"),
-  body("idade")
-    .isInt({ min: 0 })
-    .withMessage("Idade deve ser um número inteiro maior ou igual a 0"),
-  body("dataNascimento")
-    .isDate()
-    .withMessage("Data de nascimento deve ser válida"),
-];
+const { validatePacienteData } = require("../utils/validationUtils");
 
 const validateId = [param("id").isMongoId().withMessage("ID inválido")];
 
@@ -145,7 +132,7 @@ router.put("/:id", [validateId, validatePacienteData], async (req, res) => {
 
 router.delete("/:id", validateId, async (req, res) => {
   try {
-    const deletedPaciente = await deletePaciente(req.params.id);
+    const deletedPaciente = await deletePacienteService(req.params.id);
     if (!deletedPaciente) {
       return res.status(404).json({ error: "Paciente não encontrado." });
     }

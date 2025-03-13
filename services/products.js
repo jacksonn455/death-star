@@ -1,9 +1,7 @@
 const Product = require("../models/products");
-const cloudinary = require("../config/cloudinary");
-const streamifier = require("streamifier");
-const moment = require('moment');
+const { uploadImageToCloudinary } = require("../services/cloudinaryService");
 
-async function getAllProducts(query) {
+async function getAllProductsService(query) {
   try {
     const filters = {};
 
@@ -11,95 +9,64 @@ async function getAllProducts(query) {
       filters.name = { $regex: query.name, $options: "i" };
     }
 
-    if (query?.validity === 'soon') {
-      const sixMonthsFromNow = moment().add(6, 'months').toDate();
+    if (query?.validity === "soon") {
+      const sixMonthsFromNow = new Date();
+      sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
       filters.validity = { $lte: sixMonthsFromNow, $gte: new Date() };
     } else if (query?.validity) {
       filters.validity = query.validity;
     }
 
-    return await Product.find(filters).sort({ time: 1 });
+    const products = await Product.find(filters).sort({ time: 1 });
+    return products || [];
   } catch (error) {
-    console.error("Erro ao buscar produto:", error);
-    throw new Error("Erro ao buscar produto.");
+    throw new Error("Erro ao buscar produtos.");
   }
 }
 
 async function getProductByIdService(id) {
-  return await Product.findById(id);
+  try {
+    const product = await Product.findById(id);
+    return product;
+  } catch (error) {
+    throw new Error(`Erro ao buscar produto por ID: ${error.message}`);
+  }
 }
-
-const uploadImageToCloudinary = (imageFile) => {
-  return new Promise((resolve, reject) => {
-    if (!imageFile) {
-      console.error("❌ Erro: Nenhum arquivo recebido.");
-      return reject(new Error("Nenhum arquivo recebido."));
-    }
-
-    if (!imageFile.buffer) {
-      console.error("❌ Erro: O arquivo não possui buffer.");
-      return reject(new Error("O arquivo não possui buffer."));
-    }
-
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "products",
-        resource_type: "auto",
-        use_filename: true,
-        unique_filename: false,
-        overwrite: true,
-        format: "png",
-        transformation: [
-          { width: 500, height: 500, crop: "limit" },
-          { quality: "auto" },
-        ],
-      },
-      (error, result) => {
-        if (error) {
-          console.error("❌ Erro ao fazer upload:", error);
-          return reject(
-            new Error("Erro ao fazer upload da imagem no Cloudinary.")
-          );
-        }
-
-        resolve(result.secure_url);
-      }
-    );
-
-    streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
-  });
-};
 
 async function createProductService(productData) {
   try {
     if (productData.image) {
-      if (typeof productData.image === "string") {
-      } else {
-        productData.image = await uploadImageToCloudinary(productData.image);
-      }
-    } else {
+      productData.image = await uploadImageToCloudinary(
+        productData.image,
+        "produtos"
+      );
     }
 
     if (productData.validity) {
       productData.validity = new Date(productData.validity);
     }
 
-    const newProduct = await new Product(productData).save();
-
-    return newProduct;
+    const newProduct = new Product(productData);
+    return await newProduct.save();
   } catch (error) {
-    console.error("❌ Erro ao criar produto:", error);
+    throw new Error("Erro ao criar produto.");
   }
 }
 
 async function updateProductService(id, updatedData) {
   try {
     const existingProduct = await Product.findById(id);
+
     if (!existingProduct) {
       throw new Error("Produto não encontrado.");
     }
 
-    if (!updatedData.image) {
+    if (updatedData.image) {
+      updatedData.image = await uploadImageToCloudinary(
+        updatedData.image,
+        "produtos"
+      );
+    } else {
       updatedData.image = existingProduct.image;
     }
 
@@ -107,19 +74,29 @@ async function updateProductService(id, updatedData) {
       updatedData.validity = new Date(updatedData.validity);
     }
 
-    return await Product.findByIdAndUpdate(id, updatedData, { new: true });
+    const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+    return updatedProduct;
   } catch (error) {
-    console.error("Erro ao atualizar produto:", error);
     throw new Error("Erro ao atualizar produto.");
   }
 }
 
 async function deleteProductService(id) {
-  return await Product.findByIdAndDelete(id);
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(id);
+    if (!deletedProduct) {
+      throw new Error("Produto não encontrado.");
+    }
+    return deletedProduct;
+  } catch (error) {
+    throw new Error(`Erro ao deletar produto: ${error.message}`);
+  }
 }
 
 module.exports = {
-  getAllProducts,
+  getAllProductsService,
   getProductByIdService,
   createProductService,
   updateProductService,

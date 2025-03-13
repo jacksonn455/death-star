@@ -58,11 +58,13 @@ const PacienteSchema = new mongoose.Schema({
     preAgendamento: { type: String },
     horario: { type: String },
   },
-  contratoAssinaturas: [{
-    contratanteAssinatura: String,
-    contratadaAssinatura: String,
-    data: Date,
-  }],
+  contratoAssinaturas: [
+    {
+      contratanteAssinatura: String,
+      contratadaAssinatura: String,
+      data: Date,
+    },
+  ],
   patologias: [{ type: String }],
   funcionamentoIntestinal: { type: String },
   gestante: { type: String },
@@ -74,6 +76,14 @@ const PacienteSchema = new mongoose.Schema({
   nervosismo: { type: String },
   exercicio: { type: String },
   image: { type: String, required: false },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Paciente = mongoose.model("Paciente", PacienteSchema);
