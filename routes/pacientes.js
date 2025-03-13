@@ -19,29 +19,28 @@ const validateId = [param("id").isMongoId().withMessage("ID inválido")];
 
 router.get("/", async (req, res) => {
   try {
-    const pacientes = await getPacientes(req, res);
+    const pacientes = await getPacientes(req);
     res.status(200).json(pacientes);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-    res.status(500).json({ error: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
 router.get("/:id", validateId, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    if (!res.headersSent) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    return res.status(400).json({ errors: errors.array() });
   }
 
   try {
-    const paciente = await getPacienteById(req, res);
+    const paciente = await getPacienteById(req.params.id);
     if (!paciente) {
-      if (!res.headersSent) {
-        return res.status(404).json({ error: "Paciente não encontrado." });
-      }
+      return res.status(404).json({ error: "Paciente não encontrado." });
     }
+    res.status(200).json(paciente);
   } catch (error) {
     console.error("Erro ao buscar paciente:", error);
     if (!res.headersSent) {
