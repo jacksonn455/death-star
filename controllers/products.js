@@ -1,168 +1,100 @@
 const {
-  getAllProducts,
+  getAllProductsService,
   getProductByIdService,
   createProductService,
   updateProductService,
   deleteProductService,
-} = require("../services/product");
+} = require("../services/products");
 
-async function getProducts(req, res) {
+const mongoose = require("mongoose");
+
+async function getAllProducts(req, res) {
   try {
-    const { name, validity } = req.query;
-    const products = await getAllProducts({ name, validity });
-    res.status(200).send(products);
+    const { name, validity } = req.query || {};
+    const products = await getAllProductsService({ name, validity });
+
+    if (!products.length) {
+      return res.status(404).json({ error: "Nenhum produto encontrado." });
+    }
+
+    res.status(200).json(products);
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error("Erro ao buscar produtos:", error.message);
+    res
+      .status(500)
+      .json({ error: error.message || "Erro interno no servidor" });
   }
 }
 
 async function getProductById(req, res) {
   try {
-    const id = req.params.id;
-    if (id && Number(id)) {
-      const product = await getProductByIdService(id);
-      res.status(200).send(product);
-    } else {
-      res.status(422).send("ID inválido");
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "ID inválido." });
     }
+
+    const product = await getProductByIdService(id);
+    if (!product) {
+      return res.status(404).json({ error: "Produto não encontrado." });
+    }
+
+    res.status(200).json(product);
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error("Erro ao buscar produto por ID:", error.message);
+    res.status(500).json({ error: error.message });
   }
 }
 
 async function createProduct(req, res) {
   try {
     const productData = req.body;
-    const requiredFields = [
-      "name",
-      "category",
-      "quantity",
-      "price",
-      "supplier",
-    ];
-
-    for (const field of requiredFields) {
-      if (!productData[field]) {
-        return res.status(400).send(`O campo "${field}" é obrigatório.`);
-      }
-    }
-
-    let image = null;
     if (req.file) {
-      const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedFileTypes.includes(req.file.mimetype)) {
-        return res
-          .status(400)
-          .send(
-            "Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos."
-          );
-      }
-
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream({ folder: "products" }, (error, result) => {
-            if (error) {
-              console.error(
-                "Erro ao fazer upload da imagem para o Cloudinary:",
-                error
-              );
-              reject(error);
-            }
-            resolve(result);
-          })
-          .end(req.file.buffer);
-      });
-
-      image = uploadResult.secure_url;
+      productData.image = req.file.buffer;
     }
-
-    const newProduct = await createProductService({
-      ...req.body,
-      image: image,
-    });
+    const newProduct = await createProductService(productData);
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Erro ao criar produto:", error);
+    console.error("Erro ao criar produto:", error.message);
     res.status(500).json({ error: error.message });
   }
 }
 
 async function updateProduct(req, res) {
   try {
-    const id = req.params.id;
-    if (!id || isNaN(Number(id))) {
-      return res.status(422).send("ID inválido");
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "ID inválido." });
     }
 
     const updatedData = req.body;
-    let image = updatedData.image || null;
-
     if (req.file) {
-      if (!req.file.buffer) {
-        return res.status(400).send("O arquivo não possui buffer.");
-      }
-
-      const allowedFileTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedFileTypes.includes(req.file.mimetype)) {
-        return res
-          .status(400)
-          .send(
-            "Tipo de arquivo inválido. Apenas JPG, JPEG ou PNG são permitidos."
-          );
-      }
-
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream({ folder: "products" }, (error, result) => {
-            if (error) {
-              console.error(
-                "Erro ao fazer upload da imagem para o Cloudinary:",
-                error
-              );
-              reject(error);
-            }
-            resolve(result);
-          })
-          .end(req.file.buffer);
-      });
-
-      image = uploadResult.secure_url;
-    } else {
-      const existingProduct = await Product.findById(id);
-      if (!existingProduct) {
-        return res.status(404).send("Produto não encontrado.");
-      }
-      image = existingProduct.image;
+      updatedData.image = req.file.buffer;
     }
-
-    const updatedProduct = await updateProductService(id, {
-      ...updatedData,
-      image,
-    });
+    const updatedProduct = await updateProductService(id, updatedData);
     res.status(200).json(updatedProduct);
   } catch (error) {
-    console.error("Erro ao atualizar produto:", error);
+    console.error("Erro ao atualizar produto:", error.message);
     res.status(500).json({ error: error.message });
   }
 }
 
 async function deleteProduct(req, res) {
   try {
-    const id = req.params.id;
-
-    if (id && Number(id)) {
-      await deleteProductService(id);
-      res.status(200).send("Produto excluído com sucesso.");
-    } else {
-      res.status(422).send("ID inválido");
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "ID inválido." });
     }
+
+    await deleteProductService(id);
+    res.status(204).end();
   } catch (error) {
-    res.status(500).send(error.message);
+    console.error("Erro ao excluir produto:", error.message);
+    res.status(500).json({ error: error.message });
   }
 }
 
 module.exports = {
-  getProducts,
+  getAllProducts,
   getProductById,
   createProduct,
   updateProduct,

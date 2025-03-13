@@ -1,265 +1,121 @@
-const mongoose = require("mongoose");
-const { google } = require("googleapis");
 const Planner = require("../models/planner");
 const moment = require("moment-timezone");
+const googleCalendarService = require("./googleCalendarService");
+const {
+  validateId,
+  validateRequiredFields,
+} = require("../utils/validationUtils");
 require("dotenv").config();
 
 async function createPlannerService(data) {
-  let newPlanner = null;
   try {
-    const existingPlanner = await Planner.findOne({
-      date: data.date,
-      time: data.time,
-    });
-
-    if (existingPlanner) {
-      throw new Error(
-        "Já existe um agendamento para essa data e horário. Escolha outro horário."
-      );
-    }
-
-    const eventId = await addEventToGoogleCalendar(data);
+    validateRequiredFields(data, ["date", "time", "paciente"]);
+    await validateExistingPlanner(data.date, data.time);
+    const eventId = await googleCalendarService.createEvent(data);
     data.eventId = eventId;
-
-    newPlanner = await Planner.create(data);
-
-    return newPlanner;
+    return await Planner.create(data);
   } catch (error) {
-    console.error("Erro ao criar agendamento:", error);
-    
-    if (newPlanner) {
-      await Planner.deleteOne({ _id: newPlanner._id });
-    }
-
-    throw new Error(error.message || "Erro ao criar agendamento.");
-  }
-}
-
-async function addEventToGoogleCalendar(eventData) {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      private_key: process.env.GOOGLE_PRIVATE_KEY,
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    },
-    scopes: ["https://www.googleapis.com/auth/calendar"],
-  });
-
-  const calendar = google.calendar({ version: "v3", auth });
-  const calendarId = "naagibz@gmail.com";
-
-  const startDateTime = `${eventData.date}T${eventData.time}:00-03:00`;
-  const endHour = (parseInt(eventData.time.split(":")[0]) + 1) % 24;
-  const endDateTime = `${eventData.date}T${endHour
-    .toString()
-    .padStart(2, "0")}:${eventData.time.split(":")[1]}:00-03:00`;
-
-  const description = `Tipo de Serviço: ${eventData.service || "Não informado"}
-    Telefone/Contato: ${eventData.contact || "Não informado"}
-    Profissional Responsável: ${eventData.responsible || "Não informado"}
-    Observações: ${eventData.notes || "Sem observações."}`;
-
-  const event = {
-    summary: `Consulta: ${eventData.paciente}`,
-    description: description.trim(),
-    start: {
-      dateTime: startDateTime,
-      timeZone: "America/Sao_Paulo",
-    },
-    end: {
-      dateTime: endDateTime,
-      timeZone: "America/Sao_Paulo",
-    },
-  };
-
-  try {
-    const eventResponse = await calendar.events.insert({
-      calendarId,
-      resource: event,
-    });
-    return eventResponse.data.id;
-  } catch (error) {
-    console.error("Erro ao criar evento:", error);
-    if (error.response) {
-      console.error("Detalhes do erro:", error.response.data);
-    }
-    throw new Error("Erro ao criar evento no Google Calendar");
+    handleServiceError("Erro ao criar agendamento", error);
   }
 }
 
 async function getAllPlanners(query) {
   try {
-    const filters = {};
-    const now = moment().tz("America/Sao_Paulo");
+    const { pageNumber } = query;
 
-    if (query?.paciente) {
-      filters.paciente = { $regex: query.paciente, $options: "i" };
-    }
-
-    if (query?.date) {
-      const date = moment(query.date, "YYYY-MM-DD").tz("America/Sao_Paulo", true);
-      filters.date = date.format("YYYY-MM-DD");
-
-      if (date.isSame(now, "day")) {
-        filters.time = { $gte: now.format("HH:mm") };
-      }
-    }
-
-    if (query?.week !== undefined) {
-      const weekOffset = parseInt(query.week) || 0;
-      const startOfWeek = moment().startOf("week").add(weekOffset, "weeks").tz("America/Sao_Paulo");
-      const endOfWeek = moment().endOf("week").add(weekOffset, "weeks").tz("America/Sao_Paulo");
-
-      filters.date = {
-        $gte: startOfWeek.format("YYYY-MM-DD"),
-        $lte: endOfWeek.format("YYYY-MM-DD"),
+    const oldestPlanner = await Planner.findOne().sort({ date: 1 });
+    const newestPlanner = await Planner.findOne().sort({ date: -1 });
+    if (!oldestPlanner || !newestPlanner) {
+      return {
+        data: [],
+        pagination: { total: 0, totalPages: 0, currentPage: 0 },
       };
     }
 
+    const startDate = moment(oldestPlanner.date).startOf("week");
+    const endDate = moment(newestPlanner.date).endOf("week");
+    const currentWeek = moment().startOf("week");
+    const totalWeeks = Math.ceil(endDate.diff(startDate, "weeks", true));
+    const currentPage =
+      Math.ceil(currentWeek.diff(startDate, "weeks", true)) + 1;
+    const page = Math.max(
+      1,
+      Math.min(parseInt(pageNumber, 10) || currentPage, totalWeeks)
+    );
+    const weekStart = startDate.clone().add(page - 1, "weeks");
+    const weekEnd = weekStart.clone().endOf("week");
+
+    const filters = {
+      date: {
+        $gte: weekStart.format("YYYY-MM-DD"),
+        $lte: weekEnd.format("YYYY-MM-DD"),
+      },
+    };
+
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
 
-    return planners;
+    return {
+      data: planners,
+      pagination: {
+        totalPages: totalWeeks,
+        currentPage: page,
+      },
+    };
   } catch (error) {
-    console.error("Erro ao buscar agendamentos:", error);
-    throw new Error("Erro ao buscar agendamentos.");
+    handleServiceError("Erro ao buscar agendamentos", error);
   }
 }
 
 async function getPlannerByIdService(id) {
   try {
-    const planner = await Planner.findById(id);
-    return planner;
+    validateId(id);
+    return await Planner.findById(id);
   } catch (error) {
-    throw new Error("Erro ao buscar agendamento por ID.");
+    handleServiceError("Erro ao buscar agendamento por ID", error);
   }
 }
 
 async function updatePlannerService(id, data) {
   try {
-    const planner = await Planner.findById(id);
-    if (!planner) {
-      console.error(`Agendamento com ID ${id} não encontrado.`);
-      throw new Error("Agendamento não encontrado.");
-    }
-
-    if (!planner.eventId) {
-      console.error(
-        `Evento do Google Calendar não encontrado para o agendamento ${id}.`
-      );
-      throw new Error("Evento no Google Calendar não encontrado.");
-    }
-
-    await updateEventInGoogleCalendar(planner.eventId, data);
-
-    const updatedPlanner = await Planner.findByIdAndUpdate(id, data, {
-      new: true,
-    });
-    return updatedPlanner;
+    validateId(id);
+    validateRequiredFields(data, ["date", "time"]);
+    const planner = await getPlannerByIdService(id);
+    validatePlanner(planner, id);
+    await googleCalendarService.updateEventInCalendar(planner.eventId, data);
+    return await Planner.findByIdAndUpdate(id, data, { new: true });
   } catch (error) {
-    console.error("Erro ao atualizar agendamento:", error);
-    throw new Error("Erro ao atualizar agendamento.");
-  }
-}
-
-async function updateEventInGoogleCalendar(eventId, updatedData) {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      private_key: process.env.GOOGLE_PRIVATE_KEY,
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    },
-    scopes: ["https://www.googleapis.com/auth/calendar"],
-  });
-
-  const calendar = google.calendar({ version: "v3", auth });
-  const calendarId = "naagibz@gmail.com";
-
-  const startDateTime = `${updatedData.date}T${updatedData.time}:00-03:00`;
-  const endHour = (parseInt(updatedData.time.split(":")[0]) + 1) % 24;
-  const endDateTime = `${updatedData.date}T${endHour
-    .toString()
-    .padStart(2, "0")}:${updatedData.time.split(":")[1]}:00-03:00`;
-
-  const description = `
-    Tipo de Serviço: ${updatedData.service || "Não informado"}
-    Telefone/Contato: ${updatedData.contact || "Não informado"}
-    Profissional Responsável: ${updatedData.responsible || "Não informado"}
-    Observações: ${updatedData.notes || "Sem observações."}
-  `;
-
-  const event = {
-    summary: `Consulta: ${updatedData.paciente}`,
-    description: description.trim(),
-    start: {
-      dateTime: startDateTime,
-      timeZone: "America/Sao_Paulo",
-    },
-    end: {
-      dateTime: endDateTime,
-      timeZone: "America/Sao_Paulo",
-    },
-  };
-
-  try {
-    await calendar.events.update({
-      calendarId,
-      eventId,
-      resource: event,
-    });
-  } catch (error) {
-    console.error("Erro ao atualizar evento:", error);
-    throw new Error("Erro ao atualizar evento no Google Calendar.");
-  }
-}
-
-async function deleteEventFromGoogleCalendar(eventId) {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      private_key: process.env.GOOGLE_PRIVATE_KEY,
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    },
-    scopes: ["https://www.googleapis.com/auth/calendar"],
-  });
-
-  const calendar = google.calendar({ version: "v3", auth });
-  const calendarId = "naagibz@gmail.com";
-
-  try {
-    await calendar.events.delete({
-      calendarId,
-      eventId,
-    });
-  } catch (error) {
-    console.error(`Erro ao excluir evento com ID ${eventId}:`, error);
-    if (error.response) {
-      console.error("Detalhes do erro:", error.response.data);
-    }
-    throw new Error("Erro ao excluir evento no Google Calendar.");
+    handleServiceError("Erro ao atualizar agendamento", error);
   }
 }
 
 async function deletePlannerService(id) {
   try {
-    const planner = await Planner.findById(id);
-    if (!planner) {
-      console.error(
-        `Agendamento com ID ${id} não encontrado no banco de dados.`
-      );
-      throw new Error("Agendamento não encontrado.");
-    }
-
-    if (!planner.eventId) {
-      console.error(
-        `Evento do Google Calendar não encontrado para o agendamento ${id}.`
-      );
-      throw new Error("Evento no Google Calendar não encontrado.");
-    }
-
-    await deleteEventFromGoogleCalendar(planner.eventId);
-
-    await Planner.findByIdAndDelete(planner._id);
+    validateId(id);
+    const planner = await getPlannerByIdService(id);
+    validatePlanner(planner, id);
+    await googleCalendarService.deleteEvent(planner.eventId);
+    await Planner.findByIdAndDelete(id);
   } catch (error) {
-    console.error("Erro ao excluir agendamento:", error);
-    throw new Error("Erro ao excluir agendamento.");
+    handleServiceError("Erro ao excluir agendamento", error);
   }
+}
+
+async function validateExistingPlanner(date, time) {
+  const existingPlanner = await Planner.findOne({ date, time });
+  if (existingPlanner) {
+    throw new Error("Já existe um agendamento para essa data e horário.");
+  }
+}
+
+function validatePlanner(planner, id) {
+  if (!planner) throw new Error(`Agendamento com ID ${id} não encontrado.`);
+  if (!planner.eventId)
+    throw new Error("Evento no Google Calendar não encontrado.");
+}
+
+function handleServiceError(message, error) {
+  console.error(message, error);
+  throw new Error(error.message || message);
 }
 
 module.exports = {

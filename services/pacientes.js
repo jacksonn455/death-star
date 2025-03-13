@@ -1,85 +1,33 @@
 const Paciente = require("../models/pacientes");
-const cloudinary = require("../config/cloudinary");
-const streamifier = require("streamifier");
-const moment = require("moment-timezone");
+const {
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary,
+} = require("./cloudinaryService");
+const { buildPacienteFilters } = require("../utils/filterUtils");
 
 async function getPacientesService(query) {
   try {
-    const filters = {};
-    const now = moment().tz("America/Sao_Paulo");
-
-    if (query?.aniversariantesSemana) {
-      const startOfWeek = moment().startOf("week").tz("America/Sao_Paulo");
-      const endOfWeek = moment().endOf("week").tz("America/Sao_Paulo");
-
-      filters.dataNascimento = {
-        $gte: startOfWeek.startOf("day").format("YYYY-MM-DD"),
-        $lte: endOfWeek.endOf("day").format("YYYY-MM-DD"),
-      };
-    }
-
-    if (query?.nome) {
-      filters.nome = { $regex: query.nome, $options: "i" };
-    }
-
-    if (query?.dataNascimento) {
-      filters.dataNascimento = query.dataNascimento;
-    }
-
+    const filters = buildPacienteFilters(query);
     const pacientes = await Paciente.find(filters).sort({ nome: 1 });
-
-    if (!pacientes) {
-      return [];
-    }
-
-    return pacientes;
+    return pacientes || [];
   } catch (error) {
-    return [];
+    console.error("Erro ao buscar pacientes:", error);
+    throw new Error("Erro ao buscar pacientes.");
   }
 }
 
 async function getPacienteByIdService(id) {
   try {
     const paciente = await Paciente.findById(id);
+    if (!paciente) {
+      throw new Error("Paciente não encontrado.");
+    }
     return paciente;
   } catch (error) {
     console.error("Erro ao buscar paciente:", error);
     throw new Error("Erro ao buscar paciente.");
   }
 }
-
-const uploadImageToCloudinary = (imageFile) => {
-  return new Promise((resolve, reject) => {
-    if (!imageFile || !imageFile.buffer) {
-      console.error("❌ Erro: Nenhum arquivo válido recebido.");
-      return reject(new Error("Nenhum arquivo válido recebido."));
-    }
-
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "pacientes",
-        resource_type: "auto",
-        use_filename: true,
-        unique_filename: false,
-        overwrite: true,
-        format: "png",
-        transformation: [
-          { width: 500, height: 500, crop: "limit" },
-          { quality: "auto" },
-        ],
-      },
-      (error, result) => {
-        if (error) {
-          console.error("❌ Erro ao fazer upload da imagem:", error);
-          return reject(new Error("Erro ao fazer upload da imagem no Cloudinary."));
-        }
-        resolve(result.secure_url);
-      }
-    );
-
-    streamifier.createReadStream(imageFile.buffer).pipe(uploadStream);
-  });
-};
 
 async function createPacienteService(pacienteData, imageFile) {
   try {
@@ -88,7 +36,10 @@ async function createPacienteService(pacienteData, imageFile) {
     }
 
     if (imageFile) {
-      pacienteData.imagem = await uploadImageToCloudinary(imageFile);
+      pacienteData.imagem = await uploadImageToCloudinary(
+        imageFile,
+        "usuarios"
+      );
     }
 
     const newPaciente = await new Paciente(pacienteData).save();
@@ -107,7 +58,10 @@ async function updatePacienteService(id, updatedData) {
     }
 
     if (updatedData.imagem && typeof updatedData.imagem !== "string") {
-      updatedData.imagem = await uploadImageToCloudinary(updatedData.imagem);
+      updatedData.imagem = await uploadImageToCloudinary(
+        updatedData.imagem,
+        "usuarios"
+      );
     } else {
       updatedData.imagem = existingPaciente.imagem;
     }
@@ -121,10 +75,16 @@ async function updatePacienteService(id, updatedData) {
 
 async function deletePacienteService(id) {
   try {
-    const deletedPaciente = await Paciente.findByIdAndDelete(id);
-    if (!deletedPaciente) {
+    const paciente = await Paciente.findById(id);
+    if (!paciente) {
       throw new Error("Paciente não encontrado.");
     }
+
+    if (paciente.imagem) {
+      await deleteImageFromCloudinary(paciente.imagem);
+    }
+
+    const deletedPaciente = await Paciente.findByIdAndDelete(id);
     return deletedPaciente;
   } catch (error) {
     console.error("Erro ao excluir paciente:", error);

@@ -8,7 +8,15 @@ const PlannerSchema = new mongoose.Schema({
   notes: { type: String },
   date: { type: String, required: true },
   time: { type: String, required: true },
-  eventId: { type: String }
+  eventId: { type: String },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 module.exports = mongoose.model("Planner", PlannerSchema);
