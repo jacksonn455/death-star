@@ -21,7 +21,7 @@ async function createPlannerService(data) {
 
 async function getAllPlanners(query) {
   try {
-    const { pageNumber } = query;
+    const { pageNumber, date } = query;
 
     const oldestPlanner = await Planner.findOne().sort({ date: 1 });
     const newestPlanner = await Planner.findOne().sort({ date: -1 });
@@ -34,7 +34,7 @@ async function getAllPlanners(query) {
 
     const startDate = moment(oldestPlanner.date).startOf("week");
     const endDate = moment(newestPlanner.date).endOf("week");
-    const currentWeek = moment().startOf("week");
+    const currentWeek = moment().tz("America/Sao_Paulo").startOf("week");
     const totalWeeks = Math.ceil(endDate.diff(startDate, "weeks", true));
     const currentPage =
       Math.ceil(currentWeek.diff(startDate, "weeks", true)) + 1;
@@ -45,12 +45,15 @@ async function getAllPlanners(query) {
     const weekStart = startDate.clone().add(page - 1, "weeks");
     const weekEnd = weekStart.clone().endOf("week");
 
-    const filters = {
-      date: {
+    const filters = {};
+    if (date) {
+      filters.date = date;
+    } else {
+      filters.date = {
         $gte: weekStart.format("YYYY-MM-DD"),
         $lte: weekEnd.format("YYYY-MM-DD"),
-      },
-    };
+      };
+    }
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });
 
