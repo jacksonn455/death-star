@@ -54,7 +54,7 @@ const uploadImageToCloudinary = async (file, folder) => {
     return uploadResponse;
   } catch (error) {
     console.error("❌ Erro no upload:", error.message);
-    throw error;
+    throw new Error("Erro ao fazer upload da imagem: " + error.message);
   }
 };
 
@@ -82,7 +82,7 @@ const deleteImageFromCloudinary = async (imageUrl) => {
     return true;
   } catch (error) {
     console.error("❌ Erro ao deletar imagem do Cloudinary:", error.message);
-    throw new Error(error.message || "Erro ao deletar a imagem.");
+    throw new Error("Erro ao deletar a imagem: " + error.message);
   }
 };
 

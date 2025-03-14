@@ -56,21 +56,31 @@ async function createProduct(req, res) {
 
     const productData = req.body;
 
+    // Validação de campos obrigatórios
     if (!productData.name || !productData.price || !productData.quantity) {
       console.warn("Campos obrigatórios faltando.", productData);
       return res.status(400).json({
-        error: "Os campos 'name', 'price' e 'quantity' são obrigatórios."
+        error: "Os campos 'name', 'price' e 'quantity' são obrigatórios.",
       });
     }
 
+    // Adiciona a imagem ao productData, se existir
     if (req.file) {
       console.log("Arquivo recebido! Detalhes:");
       console.log("Nome do arquivo:", req.file.originalname);
       console.log("Tipo MIME:", req.file.mimetype);
       console.log("Tamanho do arquivo (bytes):", req.file.size);
-      console.log("Buffer da imagem (primeiros 100 bytes):", req.file.buffer.slice(0, 100));
+      console.log(
+        "Buffer da imagem (primeiros 100 bytes):",
+        req.file.buffer.slice(0, 100)
+      );
 
-      productData.image = req.file.buffer;
+      productData.image = {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        buffer: req.file.buffer,
+      };
     } else {
       console.warn("Nenhuma imagem foi recebida!");
     }
@@ -79,7 +89,7 @@ async function createProduct(req, res) {
 
     const newProduct = await createProductService(productData);
     console.log("Produto criado com sucesso:", newProduct);
-    
+
     res.status(201).json(newProduct);
   } catch (error) {
     console.error("Erro ao criar produto:", error);
@@ -99,7 +109,12 @@ async function updateProduct(req, res) {
 
     const updatedData = req.body;
     if (req.file) {
-      updatedData.image = req.file.buffer;
+      updatedData.image = {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        buffer: req.file.buffer,
+      };
     }
     const updatedProduct = await updateProductService(id, updatedData);
     res.status(200).json(updatedProduct);
