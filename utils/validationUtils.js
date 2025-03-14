@@ -23,20 +23,18 @@ const validateRequiredFields = (data, requiredFields) => {
   }
 };
 
-const validateFileType = (file, allowedTypes) => {
-  console.log("Objeto file:", file);
+const validateFileType = (file, allowedFormats) => {
   if (!file || !file.mimetype) {
     throw new Error("Arquivo não válido ou sem tipo MIME.");
   }
-  
-  console.log("Mimetype do arquivo:", file.mimetype);
-  if (!allowedTypes.includes(file.mimetype)) {
-    throw new Error(
-      `Tipo de arquivo inválido. Apenas ${allowedTypes.join(", ")} são permitidos.`
-    );
+
+  const fileType = file.mimetype.split("/")[1];
+  console.log("Tipo de arquivo detectado:", fileType);
+
+  if (!allowedFormats.includes(fileType)) {
+    throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
   }
 };
-
 
 const validateEmailUniqueness = async (email) => {
   const existingUser = await User.findOne({ email });

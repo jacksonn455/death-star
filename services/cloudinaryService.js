@@ -1,6 +1,4 @@
 const cloudinary = require("../config/cloudinary");
-const streamifier = require("streamifier");
-const { validateFileType } = require("../utils/validationUtils");
 
 const cloudinaryConfig = {
   allowedFormats: ["jpg", "jpeg", "png"],
@@ -12,35 +10,46 @@ const cloudinaryConfig = {
 
 const uploadImageToCloudinary = async (file, folder) => {
   try {
-    console.log("Recebendo arquivo:", file);
+    if (!file) {
+      throw new Error("Nenhum arquivo recebido.");
+    }
+
+    console.log("Arquivo recebido para upload:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
 
     validateFileType(file, cloudinaryConfig.allowedFormats);
 
-    const uploadOptions = {
-      folder: folder,
-      resource_type: "auto",
-      transformation: cloudinaryConfig.transformations,
-    };
-
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            console.error("❌ Erro ao fazer upload da imagem:", error);
-            reject(new Error("Falha ao fazer upload da imagem no Cloudinary."));
-          }
-          resolve(result);
+    const uploadResponse = await cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) {
+          throw new Error("Erro no upload para o Cloudinary: " + error.message);
         }
-      );
+        console.log("Upload para Cloudinary bem-sucedido:", result);
+        return result.secure_url;
+      }
+    ).end(file.buffer);
 
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    });
-
-    return result.secure_url;
+    return uploadResponse;
   } catch (error) {
-    console.error("❌ Erro no serviço do Cloudinary:", error.message);
-    throw new Error(error.message || "Erro ao processar a imagem.");
+    console.error("Erro no upload:", error.message);
+    throw error;
+  }
+};
+
+const validateFileType = (file, allowedFormats) => {
+  if (!file || !file.mimetype) {
+    throw new Error("Arquivo não válido ou sem tipo MIME.");
+  }
+
+  const fileType = file.mimetype.split("/")[1];
+  console.log("Tipo de arquivo detectado:", fileType);
+
+  if (!allowedFormats.includes(fileType)) {
+    throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
   }
 };
 
