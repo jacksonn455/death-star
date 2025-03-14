@@ -35,25 +35,31 @@ router.use((req, res, next) => {
   next();
 });
 
-// Rota de criação de produto
-router.post("/", upload.single("image"), (req, res, next) => {
-  console.log("📂 Tentativa de upload de arquivo...");
-
+// Middleware para preparar a imagem
+const prepareImage = (req, res, next) => {
   if (!req.file) {
-    console.warn("⚠️ Nenhum arquivo recebido.");
+    console.warn("⚠️ Nenhum arquivo de imagem enviado.");
     return res.status(400).json({ error: "Arquivo de imagem é obrigatório." });
   }
 
-  console.log("🟢 Arquivo recebido com sucesso!");
+  console.log("🟢 Arquivo de imagem recebido!");
   console.log("Nome original:", req.file.originalname);
   console.log("Tipo MIME:", req.file.mimetype);
   console.log("Tamanho:", req.file.size, "bytes");
   console.log("Buffer length:", req.file.buffer.length);
 
-  req.body.image = req.file;
+  req.body.image = {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    buffer: req.file.buffer
+  };
 
   next();
-}, validateProductData, createProduct);
+};
+
+// Rota de criação de produto
+router.post("/", upload.single("image"), prepareImage, validateProductData, createProduct);
 
 // Rota de atualização de produto
 router.put("/:id", upload.single("image"), (req, res, next) => {
@@ -65,7 +71,12 @@ router.put("/:id", upload.single("image"), (req, res, next) => {
     console.log("Tipo MIME:", req.file.mimetype);
     console.log("Tamanho:", req.file.size, "bytes");
     console.log("Buffer length:", req.file.buffer.length);
-    req.body.image = req.file;
+    req.body.image = {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      buffer: req.file.buffer
+    };
   } else {
     console.warn("⚠️ Nenhuma nova imagem enviada para atualização.");
   }
