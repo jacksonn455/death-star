@@ -48,28 +48,38 @@ async function getProductById(req, res) {
 async function createProduct(req, res) {
   try {
     console.log("Recebendo requisição para criar produto...");
-    console.log("req.body:", req.body);
-    console.log("req.file:", req.file);
+    console.log("Headers:", req.headers);
+    console.log("Query params:", req.query);
+
+    console.log("req.body recebido:", req.body);
+    console.log("req.file recebido:", req.file);
 
     const productData = req.body;
 
     if (!productData.name || !productData.price || !productData.quantity) {
+      console.warn("Campos obrigatórios faltando.", productData);
       return res.status(400).json({
         error: "Os campos 'name', 'price' e 'quantity' são obrigatórios."
       });
     }
 
     if (req.file) {
-      console.log("Arquivo recebido! Nome:", req.file.originalname);
+      console.log("Arquivo recebido! Detalhes:");
+      console.log("Nome do arquivo:", req.file.originalname);
       console.log("Tipo MIME:", req.file.mimetype);
-      console.log("Tamanho:", req.file.size);
+      console.log("Tamanho do arquivo (bytes):", req.file.size);
+      console.log("Buffer da imagem (primeiros 100 bytes):", req.file.buffer.slice(0, 100));
 
       productData.image = req.file.buffer;
     } else {
-      console.warn("Nenhum arquivo foi recebido!");
+      console.warn("Nenhuma imagem foi recebida!");
     }
 
+    console.log("Dados finais para criação do produto:", productData);
+
     const newProduct = await createProductService(productData);
+    console.log("Produto criado com sucesso:", newProduct);
+    
     res.status(201).json(newProduct);
   } catch (error) {
     console.error("Erro ao criar produto:", error);
