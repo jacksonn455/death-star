@@ -35,6 +35,10 @@ async function getProductByIdService(id) {
 
 async function createProductService(productData) {
   try {
+    if (!productData.name || !productData.price || !productData.quantity) {
+      throw new Error("Os campos 'name', 'price' e 'quantity' são obrigatórios.");
+    }
+
     if (productData.image) {
       productData.image = await uploadImageToCloudinary(
         productData.image,
@@ -49,7 +53,8 @@ async function createProductService(productData) {
     const newProduct = new Product(productData);
     return await newProduct.save();
   } catch (error) {
-    throw new Error("Erro ao criar produto.");
+    console.error("Erro ao criar produto:", error);
+    throw new Error(`Erro ao criar produto: ${error.message}`);
   }
 }
 

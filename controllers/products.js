@@ -48,14 +48,25 @@ async function getProductById(req, res) {
 async function createProduct(req, res) {
   try {
     const productData = req.body;
+
+    if (!productData.name || !productData.price || !productData.quantity) {
+      return res.status(400).json({
+        error: "Os campos 'name', 'price' e 'quantity' são obrigatórios."
+      });
+    }
+
     if (req.file) {
       productData.image = req.file.buffer;
     }
+
     const newProduct = await createProductService(productData);
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Erro ao criar produto:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("Erro ao criar produto:", error);
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+    });
   }
 }
 
