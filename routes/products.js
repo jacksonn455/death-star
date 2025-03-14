@@ -15,7 +15,6 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    console.log("🔍 Verificando tipo de arquivo...");
     if (file && file.mimetype.startsWith("image/")) {
       console.log("✅ Tipo de arquivo válido:", file.mimetype);
       cb(null, true);
@@ -23,19 +22,12 @@ const upload = multer({
       console.error("❌ Arquivo inválido ou sem tipo MIME.");
       cb(new Error("Arquivo não válido ou sem tipo MIME."));
     }
-  }
-});
-
-router.use((req, res, next) => {
-  console.log("📩 Requisição recebida:");
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
-  next();
+  },
 });
 
 function prepareImage(req) {
   if (!req.file) return null;
-
+  
   return {
     originalname: req.file.originalname,
     mimetype: req.file.mimetype,
@@ -44,7 +36,6 @@ function prepareImage(req) {
   };
 }
 
-// Rota de criação de produto
 router.post("/", upload.single("image"), (req, res, next) => {
   console.log("📂 Tentativa de upload de arquivo...");
 
@@ -56,10 +47,13 @@ router.post("/", upload.single("image"), (req, res, next) => {
   console.log("🟢 Arquivo recebido com sucesso!");
   req.body.image = prepareImage(req);
 
+  if (!req.body.image || !req.body.image.mimetype || !req.body.image.size) {
+    return res.status(400).json({ error: "Imagem inválida ou faltando informações." });
+  }
+
   next();
 }, validateProductData, createProduct);
 
-// Rota de atualização de produto
 router.put("/:id", upload.single("image"), (req, res, next) => {
   console.log("🔧 Tentativa de atualização de produto...");
 
