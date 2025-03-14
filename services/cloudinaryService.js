@@ -1,4 +1,6 @@
 const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
+const { validateFileType } = require("../utils/validationUtils");
 
 const cloudinaryConfig = {
   allowedFormats: ["jpg", "jpeg", "png"],
@@ -22,34 +24,26 @@ const uploadImageToCloudinary = async (file, folder) => {
 
     validateFileType(file, cloudinaryConfig.allowedFormats);
 
-    const uploadResponse = await cloudinary.uploader.upload_stream(
-      { folder },
-      (error, result) => {
-        if (error) {
-          throw new Error("Erro no upload para o Cloudinary: " + error.message);
+    const uploadResponse = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder },
+        (error, result) => {
+          if (error) {
+            reject(new Error("Erro no upload para o Cloudinary: " + error.message));
+          } else {
+            console.log("Upload para Cloudinary bem-sucedido:", result);
+            resolve(result.secure_url);
+          }
         }
-        console.log("Upload para Cloudinary bem-sucedido:", result);
-        return result.secure_url;
-      }
-    ).end(file.buffer);
+      );
+
+      streamifier.createReadStream(file.buffer).pipe(stream);
+    });
 
     return uploadResponse;
   } catch (error) {
     console.error("Erro no upload:", error.message);
     throw error;
-  }
-};
-
-const validateFileType = (file, allowedFormats) => {
-  if (!file || !file.mimetype) {
-    throw new Error("Arquivo não válido ou sem tipo MIME.");
-  }
-
-  const fileType = file.mimetype.split("/")[1];
-  console.log("Tipo de arquivo detectado:", fileType);
-
-  if (!allowedFormats.includes(fileType)) {
-    throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
   }
 };
 
