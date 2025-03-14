@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const { validateProductData, validateId } = require("../utils/validationUtils");
+const { validateProductData, validateId, validateIdMiddleware } = require("../utils/validationUtils");
 const {
   getAllProducts,
   getProductById,
@@ -72,7 +72,7 @@ router.put(
 
 router.get("/", getAllProducts);
 router.get("/:id", validateId, getProductById);
-router.delete("/:id", validateId, deleteProduct);
+router.delete("/:id", validateIdMiddleware, deleteProduct);
 
 router.use((err, req, res, next) => {
   console.error("🚨 Erro capturado:", err.message);
