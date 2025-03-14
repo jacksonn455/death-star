@@ -21,7 +21,7 @@ async function createPlannerService(data) {
 
 async function getAllPlanners(query) {
   try {
-    const { pageNumber, date } = query;
+    const { pageNumber, date, paciente, nextAppointments } = query;
 
     const oldestPlanner = await Planner.findOne().sort({ date: 1 });
     const newestPlanner = await Planner.findOne().sort({ date: -1 });
@@ -46,6 +46,13 @@ async function getAllPlanners(query) {
     const weekEnd = weekStart.clone().endOf("week");
 
     const filters = {};
+    if (paciente) {
+      if (paciente.length >= 3) {
+        filters.paciente = { $regex: paciente, $options: "i" };
+      } else {
+        filters.paciente = paciente;
+      }
+    }
     if (date) {
       filters.date = moment.tz(date, "America/Sao_Paulo").format("YYYY-MM-DD");
     } else {
@@ -53,6 +60,16 @@ async function getAllPlanners(query) {
         $gte: weekStart.format("YYYY-MM-DD"),
         $lte: weekEnd.format("YYYY-MM-DD"),
       };
+    }
+
+    if (nextAppointments === "true") {
+      const now = moment().tz("America/Sao_Paulo");
+      const startOfDay = now.clone().startOf('day');
+      filters.date = {
+        $gte: startOfDay.format("YYYY-MM-DD"),
+        $lte: now.clone().endOf("day").format("YYYY-MM-DD"),
+      };
+      filters.time = { $gte: now.format("HH:mm") };
     }
 
     const planners = await Planner.find(filters).sort({ date: 1, time: 1 });

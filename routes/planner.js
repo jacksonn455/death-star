@@ -10,7 +10,6 @@ const {
 } = require("../services/planner");
 const {
   handleValidationErrors,
-  validateId,
   validatePlannerData,
 } = require("../utils/validationUtils");
 const router = express.Router();
@@ -28,8 +27,8 @@ const validateIdMiddleware = [
 
 router.get("/", async (req, res, next) => {
   try {
-    const { paciente, date, week, weeks, pageNumber } = req.query;
-    const planners = await getAllPlanners({ paciente, date, week, weeks, pageNumber });
+    const { paciente, date, week, weeks, pageNumber, nextAppointments } = req.query;
+    const planners = await getAllPlanners({ paciente, date, week, weeks, pageNumber, nextAppointments });
     res.json(planners);
   } catch (error) {
     console.error("Erro ao buscar agendamentos:", error);
@@ -69,8 +68,7 @@ router.post(
 
 router.put(
   "/:id",
-  [validateId, validatePlannerData],
-  handleValidationErrors,
+  validateIdMiddleware,
   async (req, res, next) => {
     try {
       const updatedPlanner = await updatePlannerService(

@@ -57,6 +57,47 @@ async function createEvent(eventData) {
   }
 }
 
+async function updateEventInCalendar(eventId, eventData) {
+  const auth = await getAuthClient();
+  const calendar = google.calendar({ version: "v3", auth });
+
+  try {
+    const startDateTime = new Date(`${eventData.date}T${eventData.time}:00`);
+    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+
+    const event = {
+      summary: eventData.service,
+      location: "",
+      description: eventData.notes,
+      start: {
+        dateTime: startDateTime.toISOString(),
+        timeZone: "America/Sao_Paulo",
+      },
+      end: {
+        dateTime: endDateTime.toISOString(),
+        timeZone: "America/Sao_Paulo",
+      },
+      reminders: {
+        useDefault: true,
+      },
+    };
+
+    const response = await calendar.events.update({
+      calendarId,
+      eventId,
+      resource: event,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao atualizar evento:", error);
+    if (error.response) {
+      console.error("Detalhes do erro:", error.response.data);
+    }
+    throw new Error("Erro ao atualizar evento no Google Calendar.");
+  }
+}
+
 async function deleteEvent(eventId) {
   const auth = await getAuthClient();
   const calendar = google.calendar({ version: "v3", auth });
@@ -75,4 +116,4 @@ async function deleteEvent(eventId) {
   }
 }
 
-module.exports = { createEvent, deleteEvent };
+module.exports = { createEvent, updateEventInCalendar, deleteEvent };
