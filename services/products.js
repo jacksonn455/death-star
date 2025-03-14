@@ -64,6 +64,11 @@ async function createProductService(productData) {
 
     if (productData.image) {
       console.log("🖼️ Imagem detectada, iniciando upload...");
+      console.log("🔎 Detalhes da imagem recebida:", {
+        mimetype: productData.image.mimetype,
+        size: productData.image.size,
+      });
+
       productData.image = await uploadImageToCloudinary(
         productData.image,
         "produtos"
@@ -78,6 +83,7 @@ async function createProductService(productData) {
       productData.validity = new Date(productData.validity);
     }
 
+    console.log("🛠️ Salvando produto no banco de dados...");
     const newProduct = new Product(productData);
     const savedProduct = await newProduct.save();
 

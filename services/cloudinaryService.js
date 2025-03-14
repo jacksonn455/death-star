@@ -12,14 +12,14 @@ const cloudinaryConfig = {
 
 const uploadImageToCloudinary = async (file, folder) => {
   console.log("📂 Iniciando upload de imagem para Cloudinary...");
-  
+
   try {
     if (!file) {
       console.warn("⚠️ Nenhum arquivo recebido para upload.");
       throw new Error("Nenhum arquivo recebido.");
     }
 
-    console.log("📄 Arquivo recebido:", {
+    console.log("📄 Arquivo recebido para upload:", {
       originalname: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
@@ -30,7 +30,7 @@ const uploadImageToCloudinary = async (file, folder) => {
     console.log("✅ Tipo de arquivo válido!");
 
     console.log(`📤 Iniciando upload para a pasta: ${folder}`);
-    
+
     const uploadResponse = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder },
