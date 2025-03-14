@@ -2,7 +2,6 @@ const Product = require("../models/products");
 const { uploadImageToCloudinary } = require("../services/cloudinaryService");
 
 async function getAllProductsService(query) {
-  console.log("📦 Buscando todos os produtos com filtros:", query);
 
   try {
     const filters = {};
@@ -13,18 +12,14 @@ async function getAllProductsService(query) {
     }
 
     if (query?.validity === "soon") {
-      console.log("📅 Filtrando produtos com validade próxima.");
       const sixMonthsFromNow = new Date();
       sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
       filters.validity = { $lte: sixMonthsFromNow, $gte: new Date() };
     } else if (query?.validity) {
-      console.log("📅 Filtrando por validade específica:", query.validity);
       filters.validity = query.validity;
     }
 
     const products = await Product.find(filters).sort({ time: 1 });
-
-    console.log("✅ Produtos encontrados:", products.length);
     return products || [];
   } catch (error) {
     console.error("❌ Erro ao buscar produtos:", error.message);
@@ -33,17 +28,9 @@ async function getAllProductsService(query) {
 }
 
 async function getProductByIdService(id) {
-  console.log("🔎 Buscando produto por ID:", id);
 
   try {
     const product = await Product.findById(id);
-
-    if (!product) {
-      console.warn("⚠️ Produto não encontrado.");
-    } else {
-      console.log("✅ Produto encontrado:", product);
-    }
-
     return product;
   } catch (error) {
     console.error("❌ Erro ao buscar produto por ID:", error.message);
