@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const path = require("path");
 const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
 const rotaProdutos = require("./routes/products");
@@ -64,13 +63,8 @@ const startServer = async () => {
     app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
     app.use(errorMiddleware);
-
-    const buildPath = path.join(__dirname, "client", "build");
-    app.use(express.static(buildPath));
-
     app.get("*", (req, res) => {
-      console.log("Requisição para rota não API: ", req.originalUrl);
-      res.sendFile(path.resolve(buildPath, "index.html"));
+      res.redirect("https://jacksonmagnabosco.dev/millennium-falcon");
     });
 
     app.listen(port, () => {

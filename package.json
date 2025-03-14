@@ -9,8 +9,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "cd client && npm run build",
-    "heroku-postbuild": "cd client && npm run build"
+    "build": "cd ../millennium-falcon && npm install && npm run build"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
