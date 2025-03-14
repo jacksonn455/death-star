@@ -1,7 +1,16 @@
-const router = require("express").Router();
+const express = require("express");
 const multer = require("multer");
+const { validateProductData, validateId } = require("../utils/validationUtils");
+const {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} = require("../controllers/products");
+
+const router = express.Router();
 const storage = multer.memoryStorage();
-const { validateProductData } = require("../utils/validationUtils");
 
 const upload = multer({
   storage,
@@ -55,44 +64,26 @@ router.post(
   createProduct
 );
 
-async function createProduct(req, res) {
-  try {
-    console.log("Recebendo requisição para criar produto...");
-    console.log("req.body recebido:", req.body);
-    console.log("req.file recebido:", req.file);
+// Rota de atualização de produto
+router.put("/:id", upload.single("image"), (req, res, next) => {
+  console.log("🔧 Tentativa de atualização de produto...");
 
-    const productData = req.body;
-
-    if (!productData.name || !productData.price || !productData.quantity) {
-      console.warn("Campos obrigatórios faltando.", productData);
-      return res.status(400).json({
-        error: "Os campos 'name', 'price' e 'quantity' são obrigatórios.",
-      });
-    }
-
-    if (req.file) {
-      console.log("Arquivo recebido! Detalhes:");
-      console.log("Nome do arquivo:", req.file.originalname);
-      console.log("Tipo MIME:", req.file.mimetype);
-      console.log("Tamanho do arquivo (bytes):", req.file.size);
-      productData.image = req.file.buffer;
-    } else {
-      console.warn("Nenhuma imagem foi recebida!");
-    }
-
-    console.log("Dados finais para criação do produto:", productData);
-
-    const newProduct = await createProductService(productData);
-    console.log("Produto criado com sucesso:", newProduct);
-
-    res.status(201).json(newProduct);
-  } catch (error) {
-    console.error("Erro ao criar produto:", error);
-    res.status(500).json({
-      error: error.message,
-      stack: error.stack,
-    });
+  if (req.file) {
+    console.log("🟢 Arquivo de imagem para atualização:");
+    console.log("Nome original:", req.file.originalname);
+    console.log("Tipo MIME:", req.file.mimetype);
+    console.log("Tamanho:", req.file.size, "bytes");
+    console.log("Buffer length:", req.file.buffer.length);
+    req.body.image = req.file;
+  } else {
+    console.warn("⚠️ Nenhuma nova imagem enviada para atualização.");
   }
-}
+
+  next();
+}, validateId, validateProductData, updateProduct);
+
+router.get("/", getAllProducts);
+router.get("/:id", validateId, getProductById);
+router.delete("/:id", validateId, deleteProduct);
 
 module.exports = router;
