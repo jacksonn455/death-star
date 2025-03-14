@@ -29,7 +29,6 @@ const validateFileType = (file, allowedFormats) => {
   }
 
   const fileType = file.mimetype.split("/")[1];
-  console.log("Tipo de arquivo detectado:", fileType);
 
   if (!allowedFormats.includes(fileType)) {
     throw new Error(`Tipo de arquivo não suportado: ${fileType}`);

@@ -47,16 +47,8 @@ async function getProductById(req, res) {
 
 async function createProduct(req, res) {
   try {
-    console.log("Recebendo requisição para criar produto...");
-    console.log("Headers:", req.headers);
-    console.log("Query params:", req.query);
-
-    console.log("req.body recebido:", req.body);
-    console.log("req.file recebido:", req.file);
-
     const productData = req.body;
 
-    // Validação de campos obrigatórios
     if (!productData.name || !productData.price || !productData.quantity) {
       console.warn("Campos obrigatórios faltando.", productData);
       return res.status(400).json({
@@ -64,31 +56,14 @@ async function createProduct(req, res) {
       });
     }
 
-    // Adiciona a imagem ao productData, se existir
-    if (req.file) {
-      console.log("Arquivo recebido! Detalhes:");
-      console.log("Nome do arquivo:", req.file.originalname);
-      console.log("Tipo MIME:", req.file.mimetype);
-      console.log("Tamanho do arquivo (bytes):", req.file.size);
-      console.log(
-        "Buffer da imagem (primeiros 100 bytes):",
-        req.file.buffer.slice(0, 100)
-      );
-
-      productData.image = {
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        buffer: req.file.buffer,
-      };
-    } else {
-      console.warn("Nenhuma imagem foi recebida!");
-    }
-
-    console.log("Dados finais para criação do produto:", productData);
+    productData.image = {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      buffer: req.file.buffer,
+    };
 
     const newProduct = await createProductService(productData);
-    console.log("Produto criado com sucesso:", newProduct);
 
     res.status(201).json(newProduct);
   } catch (error) {

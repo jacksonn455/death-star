@@ -2,12 +2,10 @@ const Product = require("../models/products");
 const { uploadImageToCloudinary } = require("../services/cloudinaryService");
 
 async function getAllProductsService(query) {
-
   try {
     const filters = {};
 
     if (query?.name) {
-      console.log("🔍 Filtrando por nome:", query.name);
       filters.name = { $regex: query.name, $options: "i" };
     }
 
@@ -28,7 +26,6 @@ async function getAllProductsService(query) {
 }
 
 async function getProductByIdService(id) {
-
   try {
     const product = await Product.findById(id);
     return product;
@@ -39,42 +36,30 @@ async function getProductByIdService(id) {
 }
 
 async function createProductService(productData) {
-  console.log("➕ Criando novo produto...");
-
   try {
     if (!productData.name || !productData.price || !productData.quantity) {
       console.warn("⚠️ Campos obrigatórios faltando:", productData);
-      throw new Error("Os campos 'name', 'price' e 'quantity' são obrigatórios.");
+      throw new Error(
+        "Os campos 'name', 'price' e 'quantity' são obrigatórios."
+      );
     }
 
-    console.log("📄 Dados do produto recebido:", productData);
-
     if (productData.image) {
-      console.log("🖼️ Imagem detectada, iniciando upload...");
-      console.log("🔎 Detalhes da imagem recebida:", {
-        mimetype: productData.image.mimetype,
-        size: productData.image.size,
-      });
-
       productData.image = await uploadImageToCloudinary(
         productData.image,
         "produtos"
       );
-      console.log("✅ Imagem enviada para Cloudinary:", productData.image);
     } else {
       console.warn("⚠️ Nenhuma imagem recebida para upload.");
     }
 
     if (productData.validity) {
-      console.log("📅 Convertendo validade para Date...");
       productData.validity = new Date(productData.validity);
     }
 
-    console.log("🛠️ Salvando produto no banco de dados...");
     const newProduct = new Product(productData);
     const savedProduct = await newProduct.save();
 
-    console.log("🎯 Produto criado com sucesso:", savedProduct);
     return savedProduct;
   } catch (error) {
     console.error("❌ Erro ao criar produto:", error.message);
@@ -83,8 +68,6 @@ async function createProductService(productData) {
 }
 
 async function updateProductService(id, updatedData) {
-  console.log("✏️ Atualizando produto com ID:", id);
-
   try {
     const existingProduct = await Product.findById(id);
 
@@ -93,23 +76,16 @@ async function updateProductService(id, updatedData) {
       throw new Error("Produto não encontrado.");
     }
 
-    console.log("📄 Dados atuais do produto:", existingProduct);
-    console.log("🔧 Novos dados recebidos para atualização:", updatedData);
-
     if (updatedData.image) {
-      console.log("🖼️ Nova imagem detectada, iniciando upload...");
       updatedData.image = await uploadImageToCloudinary(
         updatedData.image,
         "produtos"
       );
-      console.log("✅ Nova imagem enviada para Cloudinary:", updatedData.image);
     } else {
-      console.log("🔗 Mantendo imagem anterior.");
       updatedData.image = existingProduct.image;
     }
 
     if (updatedData.validity) {
-      console.log("📅 Convertendo nova validade para Date...");
       updatedData.validity = new Date(updatedData.validity);
     }
 
@@ -117,7 +93,6 @@ async function updateProductService(id, updatedData) {
       new: true,
     });
 
-    console.log("✅ Produto atualizado com sucesso:", updatedProduct);
     return updatedProduct;
   } catch (error) {
     console.error("❌ Erro ao atualizar produto:", error.message);
@@ -126,8 +101,6 @@ async function updateProductService(id, updatedData) {
 }
 
 async function deleteProductService(id) {
-  console.log("🗑️ Deletando produto com ID:", id);
-
   try {
     const deletedProduct = await Product.findByIdAndDelete(id);
 
@@ -136,7 +109,6 @@ async function deleteProductService(id) {
       throw new Error("Produto não encontrado.");
     }
 
-    console.log("✅ Produto deletado com sucesso:", deletedProduct);
     return deletedProduct;
   } catch (error) {
     console.error("❌ Erro ao deletar produto:", error.message);
