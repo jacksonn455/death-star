@@ -12,8 +12,7 @@ const {
 const router = express.Router();
 const storage = multer.memoryStorage();
 
-// Configurar o multer com logs
-const upload = multer({ 
+const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     console.log("🔍 Verificando tipo de arquivo...");
@@ -27,7 +26,6 @@ const upload = multer({
   }
 });
 
-// Middleware para logar a requisição
 router.use((req, res, next) => {
   console.log("📩 Requisição recebida:");
   console.log("Headers:", req.headers);
@@ -35,31 +33,31 @@ router.use((req, res, next) => {
   next();
 });
 
-// Middleware para preparar a imagem
-const prepareImage = (req, res, next) => {
-  if (!req.file) {
-    console.warn("⚠️ Nenhum arquivo de imagem enviado.");
-    return res.status(400).json({ error: "Arquivo de imagem é obrigatório." });
-  }
+function prepareImage(req) {
+  if (!req.file) return null;
 
-  console.log("🟢 Arquivo de imagem recebido!");
-  console.log("Nome original:", req.file.originalname);
-  console.log("Tipo MIME:", req.file.mimetype);
-  console.log("Tamanho:", req.file.size, "bytes");
-  console.log("Buffer length:", req.file.buffer.length);
-
-  req.body.image = {
+  return {
     originalname: req.file.originalname,
     mimetype: req.file.mimetype,
     size: req.file.size,
-    buffer: req.file.buffer
+    buffer: req.file.buffer,
   };
-
-  next();
-};
+}
 
 // Rota de criação de produto
-router.post("/", upload.single("image"), prepareImage, validateProductData, createProduct);
+router.post("/", upload.single("image"), (req, res, next) => {
+  console.log("📂 Tentativa de upload de arquivo...");
+
+  if (!req.file) {
+    console.warn("⚠️ Nenhum arquivo recebido.");
+    return res.status(400).json({ error: "Arquivo de imagem é obrigatório." });
+  }
+
+  console.log("🟢 Arquivo recebido com sucesso!");
+  req.body.image = prepareImage(req);
+
+  next();
+}, validateProductData, createProduct);
 
 // Rota de atualização de produto
 router.put("/:id", upload.single("image"), (req, res, next) => {
@@ -67,16 +65,7 @@ router.put("/:id", upload.single("image"), (req, res, next) => {
 
   if (req.file) {
     console.log("🟢 Arquivo de imagem para atualização:");
-    console.log("Nome original:", req.file.originalname);
-    console.log("Tipo MIME:", req.file.mimetype);
-    console.log("Tamanho:", req.file.size, "bytes");
-    console.log("Buffer length:", req.file.buffer.length);
-    req.body.image = {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      buffer: req.file.buffer
-    };
+    req.body.image = prepareImage(req);
   } else {
     console.warn("⚠️ Nenhuma nova imagem enviada para atualização.");
   }
