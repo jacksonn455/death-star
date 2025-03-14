@@ -65,13 +65,13 @@ router.put(
 
     next();
   },
-  validateId,
+  validateIdMiddleware,
   validateProductData,
   updateProduct
 );
 
 router.get("/", getAllProducts);
-router.get("/:id", validateId, getProductById);
+router.get("/:id", validateIdMiddleware, getProductById);
 router.delete("/:id", validateIdMiddleware, deleteProduct);
 
 router.use((err, req, res, next) => {
