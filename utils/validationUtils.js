@@ -24,6 +24,7 @@ const validateRequiredFields = (data, requiredFields) => {
 };
 
 const validateFileType = (file, allowedTypes) => {
+  console.log("Mimetype do arquivo:", file.mimetype);
   if (!allowedTypes.includes(file.mimetype)) {
     throw new Error(
       `Tipo de arquivo inválido. Apenas ${allowedTypes.join(", ")} são permitidos.`
