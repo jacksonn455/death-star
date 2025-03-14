@@ -1,4 +1,6 @@
 const express = require("express");
+const mongoose = require("mongoose");
+const { param } = require("express-validator");
 const {
   getAllPlanners,
   getPlannerByIdService,
@@ -13,6 +15,17 @@ const {
 } = require("../utils/validationUtils");
 const router = express.Router();
 
+const validateIdMiddleware = [
+  param("id")
+    .custom((id) => {
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error("ID inválido.");
+      }
+      return true;
+    })
+    .withMessage("ID inválido."),
+];
+
 router.get("/", async (req, res, next) => {
   try {
     const { paciente, date, week, weeks, pageNumber } = req.query;
@@ -26,8 +39,7 @@ router.get("/", async (req, res, next) => {
 
 router.get(
   "/:id",
-  validateId,
-  handleValidationErrors,
+  validateIdMiddleware,
   async (req, res, next) => {
     try {
       const planner = await getPlannerByIdService(req.params.id);
@@ -75,8 +87,7 @@ router.put(
 
 router.delete(
   "/:id",
-  validateId,
-  handleValidationErrors,
+  validateIdMiddleware,
   async (req, res, next) => {
     try {
       await deletePlannerService(req.params.id);

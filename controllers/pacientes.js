@@ -20,7 +20,7 @@ async function getPacientes(req, res) {
 
 async function getPacienteById(req, res) {
   const { id } = req.params;
-  validateId(id);
+  validateId(String(id));
   const paciente = await getPacienteByIdService(id);
   if (!paciente) {
     return res.status(404).send("Paciente não encontrado.");
@@ -45,7 +45,7 @@ async function createPaciente(req, res) {
 
 async function updatePaciente(req, res) {
   const { id } = req.params;
-  validateId(id);
+  validateId(String(id));
   const updatedData = req.body;
   const updatedPaciente = await updatePacienteService(id, updatedData);
   if (!updatedPaciente) {
@@ -56,7 +56,7 @@ async function updatePaciente(req, res) {
 
 async function deletePaciente(req, res) {
   const { id } = req.params;
-  validateId(id);
+  validateId(String(id));
   const paciente = await deletePacienteService(id);
   if (!paciente) {
     return res.status(404).send("Paciente não encontrado.");

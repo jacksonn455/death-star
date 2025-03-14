@@ -11,8 +11,8 @@ async function createPlannerService(data) {
   try {
     validateRequiredFields(data, ["date", "time", "paciente"]);
     await validateExistingPlanner(data.date, data.time);
-    const eventId = await googleCalendarService.createEvent(data);
-    data.eventId = eventId;
+    const event = await googleCalendarService.createEvent(data);
+    data.eventId = event.id;
     return await Planner.create(data);
   } catch (error) {
     handleServiceError("Erro ao criar agendamento", error);

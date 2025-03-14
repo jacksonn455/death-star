@@ -22,11 +22,31 @@ async function createEvent(eventData) {
   const calendar = google.calendar({ version: "v3", auth });
 
   try {
+    const startDateTime = new Date(`${eventData.date}T${eventData.time}:00`);
+    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+
+    const event = {
+      summary: eventData.service,
+      location: "",
+      description: eventData.notes,
+      start: {
+        dateTime: startDateTime.toISOString(),
+        timeZone: "America/Sao_Paulo",
+      },
+      end: {
+        dateTime: endDateTime.toISOString(),
+        timeZone: "America/Sao_Paulo",
+      },
+      reminders: {
+        useDefault: true,
+      },
+    };
+
     const response = await calendar.events.insert({
       calendarId,
-      resource: eventData,
+      resource: event,
     });
-    console.log("Evento criado com sucesso:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Erro ao criar evento:", error);
@@ -46,7 +66,6 @@ async function deleteEvent(eventId) {
       calendarId,
       eventId,
     });
-    console.log(`Evento com ID ${eventId} excluído com sucesso.`);
   } catch (error) {
     console.error(`Erro ao excluir evento com ID ${eventId}`, error);
     if (error.response) {

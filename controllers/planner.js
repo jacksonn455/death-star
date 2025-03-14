@@ -23,7 +23,7 @@ async function getPlanners(req, res, next) {
 
 async function getPlannerById(req, res, next) {
   try {
-    validateId(req.params.id);
+    validateId(String(req.params.id));
     const planner = await getPlannerByIdService(req.params.id);
     res.status(200).send(planner);
   } catch (error) {
@@ -51,7 +51,7 @@ async function createPlanner(req, res, next) {
 
 async function updatePlanner(req, res, next) {
   try {
-    validateId(req.params.id);
+    validateId(String(req.params.id));
     const updatedPlanner = await updatePlannerService(req.params.id, req.body);
     res.status(200).send(updatedPlanner);
   } catch (error) {
@@ -61,7 +61,7 @@ async function updatePlanner(req, res, next) {
 
 async function deletePlanner(req, res, next) {
   try {
-    validateId(req.params.id);
+    validateId(String(req.params.id));
     await deletePlannerService(req.params.id);
     res.status(200).send("Agendamento excluído com sucesso.");
   } catch (error) {

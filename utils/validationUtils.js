@@ -1,7 +1,13 @@
 const mongoose = require("mongoose");
-const { body } = require("express-validator");
+const { body, validationResult, param } = require("express-validator");
 const moment = require("moment");
 const { User } = require("../models/users");
+
+const validateIdMiddleware = [
+  param("id")
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage("ID inválido."),
+];
 
 const validateId = (id) => {
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -20,16 +26,13 @@ const validateRequiredFields = (data, requiredFields) => {
 const validateFileType = (file, allowedTypes) => {
   if (!allowedTypes.includes(file.mimetype)) {
     throw new Error(
-      `Tipo de arquivo inválido. Apenas ${allowedTypes.join(
-        ", "
-      )} são permitidos.`
+      `Tipo de arquivo inválido. Apenas ${allowedTypes.join(", ")} são permitidos.`
     );
   }
 };
 
 const validateEmailUniqueness = async (email) => {
   const existingUser = await User.findOne({ email });
-
   if (existingUser) {
     throw new Error("Email já está em uso");
   }
@@ -65,7 +68,7 @@ const validatePacienteData = [
     .isInt({ min: 0 })
     .withMessage("Idade deve ser um número inteiro maior ou igual a 0"),
   body("dataNascimento")
-    .isDate()
+    .isISO8601()
     .withMessage("Data de nascimento deve ser válida"),
 ];
 
@@ -78,13 +81,14 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 const validatePlannerData = [
-  body("date").isString().withMessage("Data inválida"),
-  body("time").isString().withMessage("Hora inválida"),
+  body("date").isISO8601().withMessage("Data inválida"),
+  body("time").matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage("Hora inválida"),
   body("paciente").isString().notEmpty().withMessage("Paciente é obrigatório"),
 ];
 
 module.exports = {
   validateId,
+  validateIdMiddleware,
   validateRequiredFields,
   validateFileType,
   validateEmailUniqueness,
