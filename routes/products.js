@@ -1,4 +1,8 @@
+const router = require("express").Router();
+const multer = require("multer");
 const storage = multer.memoryStorage();
+const { validateProductData } = require("../utils/validationUtils");
+
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
