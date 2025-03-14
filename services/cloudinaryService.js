@@ -19,11 +19,17 @@ const uploadImageToCloudinary = async (file, folder) => {
       throw new Error("Nenhum arquivo recebido.");
     }
 
-    console.log("📄 Arquivo recebido para upload:", {
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
+    console.log("📄 Verificando propriedades do arquivo recebido:", {
+      originalname: file.originalname || 'N/A',
+      mimetype: file.mimetype || 'N/A',
+      size: file.size || 'N/A',
+      bufferLength: file.buffer ? file.buffer.length : 0,
     });
+
+    if (!file.mimetype || !file.buffer) {
+      console.error("❌ Arquivo inválido ou não processado corretamente pelo multer.");
+      throw new Error("Arquivo inválido ou ausente.");
+    }
 
     console.log("🔎 Validando tipo de arquivo...");
     validateFileType(file, cloudinaryConfig.allowedFormats);
