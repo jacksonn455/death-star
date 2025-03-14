@@ -32,8 +32,8 @@ async function getAllPlanners(query) {
       };
     }
 
-    const startDate = moment(oldestPlanner.date).startOf("week");
-    const endDate = moment(newestPlanner.date).endOf("week");
+    const startDate = moment(oldestPlanner.date).tz("America/Sao_Paulo").startOf("week");
+    const endDate = moment(newestPlanner.date).tz("America/Sao_Paulo").endOf("week");
     const currentWeek = moment().tz("America/Sao_Paulo").startOf("week");
     const totalWeeks = Math.ceil(endDate.diff(startDate, "weeks", true));
     const currentPage =
@@ -47,7 +47,7 @@ async function getAllPlanners(query) {
 
     const filters = {};
     if (date) {
-      filters.date = date;
+      filters.date = moment.tz(date, "America/Sao_Paulo").format("YYYY-MM-DD");
     } else {
       filters.date = {
         $gte: weekStart.format("YYYY-MM-DD"),
