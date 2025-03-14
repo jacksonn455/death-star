@@ -47,6 +47,7 @@ const startServer = async () => {
   try {
     await dbConnect();
     console.log("✅ Banco de dados conectado!");
+
     app.use((req, res, next) => {
       const timeout = 15000;
       const timer = setTimeout(() => {
@@ -55,6 +56,7 @@ const startServer = async () => {
       }, timeout);
 
       res.on("finish", () => clearTimeout(timer));
+      res.on("close", () => clearTimeout(timer));
       next();
     });
 
@@ -62,9 +64,16 @@ const startServer = async () => {
     app.use("/agenda", authMiddleware, rotaAgendamento);
     app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
+
     app.use(errorMiddleware);
+
+    const apiRoutes = ["/pacientes", "/agenda", "/produtos", "/auth"];
+
     app.get("*", (req, res) => {
-      res.redirect("https://jacksonmagnabosco.dev/millennium-falcon");
+      if (!apiRoutes.includes(req.path)) {
+        return res.redirect(`https://jacksonmagnabosco.dev/millennium-falcon${req.path}`);
+      }
+      res.status(404).json({ error: "Rota não encontrada." });
     });
 
     app.listen(port, () => {
