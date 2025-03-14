@@ -64,11 +64,10 @@ const startServer = async () => {
     app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
     app.use(errorMiddleware);
-    app.use(express.static(path.join(__dirname, "build")));
-
-    app.get("*", (req, res) => {
-      res.sendFile(path.resolve(__dirname, "build", "index.html"));
-    });
+    app.use(express.static(path.join(__dirname, 'build')));
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+    });    
 
     app.listen(port, () => {
       console.log(`🚀 Servidor rodando na porta ${port}`);

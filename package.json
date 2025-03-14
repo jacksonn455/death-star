@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "echo 'No build script for now'"
+    "build": "cd client && npm run build",
+    "heroku-postbuild": "cd client && npm run build"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
