@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const path = require("path"); // Adicione esta linha
+const path = require("path");
 const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
 const rotaProdutos = require("./routes/products");
@@ -11,8 +11,6 @@ const { authMiddleware } = require("./middlewares/auth");
 const errorMiddleware = require("./middlewares/error");
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const allowedOrigins = [
   "https://jacksonmagnabosco.dev",
@@ -36,6 +34,9 @@ app.use(
   })
 );
 
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 const port = process.env.PORT || 8000;
 
 const startServer = async () => {
@@ -47,7 +48,6 @@ const startServer = async () => {
   try {
     await dbConnect();
     console.log("✅ Banco de dados conectado!");
-
     app.use((req, res, next) => {
       const timeout = 15000;
       const timer = setTimeout(() => {
@@ -64,10 +64,14 @@ const startServer = async () => {
     app.use("/produtos", authMiddleware, rotaProdutos);
     app.use("/auth", rotaAuth);
     app.use(errorMiddleware);
-    app.use(express.static(path.join(__dirname, 'build')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
-    });    
+
+    const buildPath = path.join(__dirname, "client", "build");
+    app.use(express.static(buildPath));
+
+    app.get("*", (req, res) => {
+      console.log("Requisição para rota não API: ", req.originalUrl);
+      res.sendFile(path.resolve(buildPath, "index.html"));
+    });
 
     app.listen(port, () => {
       console.log(`🚀 Servidor rodando na porta ${port}`);
