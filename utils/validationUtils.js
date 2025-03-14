@@ -5,7 +5,12 @@ const { User } = require("../models/users");
 
 const validateIdMiddleware = [
   param("id")
-    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .custom((id) => {
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error("ID inválido.");
+      }
+      return true;
+    })
     .withMessage("ID inválido."),
 ];
 
