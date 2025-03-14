@@ -12,6 +12,8 @@ const cloudinaryConfig = {
 
 const uploadImageToCloudinary = async (file, folder) => {
   try {
+    console.log("Recebendo arquivo:", file);
+
     validateFileType(file, cloudinaryConfig.allowedFormats);
 
     const uploadOptions = {
