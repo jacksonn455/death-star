@@ -47,6 +47,10 @@ async function getProductById(req, res) {
 
 async function createProduct(req, res) {
   try {
+    console.log("Recebendo requisição para criar produto...");
+    console.log("req.body:", req.body);
+    console.log("req.file:", req.file);
+
     const productData = req.body;
 
     if (!productData.name || !productData.price || !productData.quantity) {
@@ -56,7 +60,13 @@ async function createProduct(req, res) {
     }
 
     if (req.file) {
+      console.log("Arquivo recebido! Nome:", req.file.originalname);
+      console.log("Tipo MIME:", req.file.mimetype);
+      console.log("Tamanho:", req.file.size);
+
       productData.image = req.file.buffer;
+    } else {
+      console.warn("Nenhum arquivo foi recebido!");
     }
 
     const newProduct = await createProductService(productData);
