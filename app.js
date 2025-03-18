@@ -4,6 +4,7 @@ const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
 const rotaProdutos = require("./routes/products");
 const rotaAuth = require("./routes/auth");
+const rotaHealth = require("./routes/health");
 const cors = require("cors");
 const dbConnect = require("./config/dbConnect.js");
 const { authMiddleware } = require("./middlewares/auth");
@@ -60,6 +61,7 @@ const startServer = async () => {
       next();
     });
 
+    app.use("/health", rotaHealth);
     app.use("/pacientes", authMiddleware, rotaPacientes);
     app.use("/agenda", authMiddleware, rotaAgendamento);
     app.use("/produtos", authMiddleware, rotaProdutos);
@@ -67,11 +69,19 @@ const startServer = async () => {
 
     app.use(errorMiddleware);
 
-    const apiRoutes = ["/pacientes", "/agenda", "/produtos", "/auth"];
+    const apiRoutes = [
+      "/pacientes",
+      "/agenda",
+      "/produtos",
+      "/auth",
+      "/health",
+    ];
 
     app.get("*", (req, res) => {
-      if (!apiRoutes.includes(req.path)) {
-        return res.redirect(`https://jacksonmagnabosco.dev/millennium-falcon${req.path}`);
+      if (!apiRoutes.some((route) => req.path.startsWith(route))) {
+        return res.redirect(
+          `https://jacksonmagnabosco.dev/millennium-falcon${req.path}`
+        );
       }
       res.status(404).json({ error: "Rota não encontrada." });
     });
