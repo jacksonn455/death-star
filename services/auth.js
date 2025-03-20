@@ -2,6 +2,7 @@ const { User } = require("../models/users");
 const { compare, hash } = require("bcryptjs");
 const { generateToken, generateRefreshToken } = require("../utils/jwt");
 const { validateRequiredFields } = require("../utils/validationUtils");
+const jwt = require("jsonwebtoken");
 
 async function login(dto) {
   const { email, password } = dto;
@@ -37,8 +38,27 @@ async function refreshToken(token) {
   }
 
   const accessToken = generateToken({ email: user.email, role: user.role });
+  const newRefreshToken = generateRefreshToken({ email: user.email });
 
-  return accessToken;
+  user.refreshToken = newRefreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken: newRefreshToken };
+}
+
+async function refreshToken(token) {
+  const user = await User.findOne({ refreshToken: token });
+
+  if (!user) {
+    throw new Error("Refresh token inválido.");
+  }
+
+  const accessToken = generateToken({ email: user.email, role: user.role });
+  const newRefreshToken = generateRefreshToken({ email: user.email });
+  user.refreshToken = newRefreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken };
 }
 
 async function register(dto) {

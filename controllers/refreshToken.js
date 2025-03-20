@@ -8,9 +8,8 @@ async function refreshTokenController(req, res, next) {
       throw new Error("Refresh token é obrigatório.");
     }
 
-    const accessToken = await refreshToken(token);
-
-    res.status(200).json({ accessToken });
+    const tokens = await refreshToken(token);
+    res.status(200).json(tokens);
   } catch (error) {
     next(error);
   }
