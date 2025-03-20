@@ -55,10 +55,11 @@ async function refreshToken(token) {
 
   const accessToken = generateToken({ email: user.email, role: user.role });
   const newRefreshToken = generateRefreshToken({ email: user.email });
+
   user.refreshToken = newRefreshToken;
   await user.save();
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken: newRefreshToken };
 }
 
 async function register(dto) {
