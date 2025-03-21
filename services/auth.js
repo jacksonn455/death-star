@@ -24,7 +24,7 @@ async function login(dto) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const refreshToken = generateRefreshToken({ email: user.email });
 
-  user.refreshToken = refreshToken;
+  user.refreshTokens.push(refreshToken);
   await user.save();
 
   return { accessToken, refreshToken };
@@ -47,7 +47,7 @@ async function refreshToken(token) {
 }
 
 async function refreshToken(token) {
-  const user = await User.findOne({ refreshToken: token });
+  const user = await User.findOne({ refreshTokens: token });
 
   if (!user) {
     throw new Error("Refresh token inválido.");
@@ -56,7 +56,9 @@ async function refreshToken(token) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const newRefreshToken = generateRefreshToken({ email: user.email });
 
-  user.refreshToken = newRefreshToken;
+  user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
+  user.refreshTokens.push(newRefreshToken);
+
   await user.save();
 
   return { accessToken, refreshToken: newRefreshToken };
@@ -92,8 +94,24 @@ async function register(dto) {
   return { message: "Usuário criado com sucesso!" };
 }
 
+async function logout(token) {
+  const user = await User.findOne({ refreshTokens: token });
+
+  if (!user) {
+    console.warn("Tentativa de logout com um refresh token inválido.");
+    return;
+  }
+
+  const tokenIndex = user.refreshTokens.indexOf(token);
+  if (tokenIndex !== -1) {
+    user.refreshTokens.splice(tokenIndex, 1);
+    await user.save();
+  }
+}
+
 module.exports = {
   login,
   refreshToken,
   register,
+  logout,
 };

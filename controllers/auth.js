@@ -1,4 +1,4 @@
-const { login, register } = require("../services/auth");
+const { login, register, logout } = require("../services/auth");
 const { validateRequiredFields } = require("../utils/validationUtils");
 
 async function loginController(req, res, next) {
@@ -34,4 +34,14 @@ async function registerController(req, res, next) {
   }
 }
 
-module.exports = { loginController, registerController };
+async function logoutController(req, res, next) {
+  try {
+    const { refreshToken } = req.body;
+    await logout(refreshToken);
+    res.status(200).json({ message: "Logout realizado com sucesso" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { loginController, registerController, logoutController };
