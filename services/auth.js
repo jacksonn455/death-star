@@ -2,7 +2,6 @@ const { User } = require("../models/users");
 const { compare, hash } = require("bcryptjs");
 const { generateToken, generateRefreshToken } = require("../utils/jwt");
 const { validateRequiredFields } = require("../utils/validationUtils");
-const jwt = require("jsonwebtoken");
 
 async function login(dto) {
   const { email, password } = dto;
@@ -24,26 +23,12 @@ async function login(dto) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const refreshToken = generateRefreshToken({ email: user.email });
 
-  user.refreshTokens.push(refreshToken);
-  await user.save();
+  await User.findOneAndUpdate(
+    { email: user.email },
+    { $push: { refreshTokens: refreshToken } }
+  );
 
   return { accessToken, refreshToken };
-}
-
-async function refreshToken(token) {
-  const user = await User.findOne({ refreshToken: token });
-
-  if (!user) {
-    throw new Error("Refresh token inválido.");
-  }
-
-  const accessToken = generateToken({ email: user.email, role: user.role });
-  const newRefreshToken = generateRefreshToken({ email: user.email });
-
-  user.refreshToken = newRefreshToken;
-  await user.save();
-
-  return { accessToken, refreshToken: newRefreshToken };
 }
 
 async function refreshToken(token) {
@@ -56,10 +41,13 @@ async function refreshToken(token) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const newRefreshToken = generateRefreshToken({ email: user.email });
 
-  user.refreshTokens = user.refreshTokens.filter((t) => t !== token);
-  user.refreshTokens.push(newRefreshToken);
-
-  await user.save();
+  await User.findOneAndUpdate(
+    { refreshTokens: token },
+    {
+      $pull: { refreshTokens: token },
+      $push: { refreshTokens: newRefreshToken },
+    }
+  );
 
   return { accessToken, refreshToken: newRefreshToken };
 }
@@ -87,6 +75,7 @@ async function register(dto) {
     email,
     password: hashedPassword,
     role,
+    refreshTokens: [], // initialize empty list
   });
 
   await newUser.save();
@@ -102,11 +91,10 @@ async function logout(token) {
     return;
   }
 
-  const tokenIndex = user.refreshTokens.indexOf(token);
-  if (tokenIndex !== -1) {
-    user.refreshTokens.splice(tokenIndex, 1);
-    await user.save();
-  }
+  await User.findOneAndUpdate(
+    { refreshTokens: token },
+    { $pull: { refreshTokens: token } }
+  );
 }
 
 module.exports = {
