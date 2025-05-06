@@ -41,12 +41,11 @@ async function refreshToken(token) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const newRefreshToken = generateRefreshToken({ email: user.email });
 
-  await User.findOneAndUpdate(
-    { refreshTokens: token },
-    {
-      $pull: { refreshTokens: token },
-      $push: { refreshTokens: newRefreshToken },
-    }
+  await User.updateOne({ _id: user._id }, { $pull: { refreshTokens: token } });
+
+  await User.updateOne(
+    { _id: user._id },
+    { $push: { refreshTokens: newRefreshToken } }
   );
 
   return { accessToken, refreshToken: newRefreshToken };
@@ -75,7 +74,7 @@ async function register(dto) {
     email,
     password: hashedPassword,
     role,
-    refreshTokens: [], // initialize empty list
+    refreshTokens: [],
   });
 
   await newUser.save();
