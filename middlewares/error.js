@@ -3,7 +3,8 @@ const errorMiddleware = (error, req, res, next) => {
 
   if (
     error.message.includes("inválido") ||
-    error.message.includes("obrigatório")
+    error.message.includes("obrigatório") ||
+    error.message.includes("Já existe um agendamento")
   ) {
     return res.status(400).json({ error: error.message });
   }
@@ -11,6 +12,7 @@ const errorMiddleware = (error, req, res, next) => {
   if (error.message.includes("não encontrado")) {
     return res.status(404).json({ error: error.message });
   }
+
   res.status(500).json({ error: "Erro interno no servidor." });
 };
 

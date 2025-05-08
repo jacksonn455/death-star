@@ -53,9 +53,10 @@ async function getAllPlanners(query) {
         filters.paciente = paciente;
       }
     }
+
     if (date) {
       filters.date = moment.tz(date, "America/Sao_Paulo").format("YYYY-MM-DD");
-    } else {
+    } else if (!paciente) {
       filters.date = {
         $gte: weekStart.format("YYYY-MM-DD"),
         $lte: weekEnd.format("YYYY-MM-DD"),
