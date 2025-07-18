@@ -26,19 +26,26 @@ async function createSale(req, res) {
       });
     }
 
+<<<<<<< HEAD
     if (!req.user || !req.user.id) {
       return res.status(401).json({
         error: "Usuário não autenticado ou token inválido.",
       });
     }
 
+=======
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     saleData.soldBy = req.user.id;
 
     const newSale = await createSaleService(saleData);
 
     res.status(201).json(newSale);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao criar venda:", error.message);
+=======
+    console.error("Erro ao criar venda:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({
       error: error.message,
     });
@@ -52,7 +59,11 @@ async function getAllSales(req, res) {
 
     res.status(200).json(sales);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao buscar vendas:", error.message);
+=======
+    console.error("Erro ao buscar vendas:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message || "Erro interno no servidor" });
   }
 }
@@ -71,7 +82,11 @@ async function getSaleById(req, res) {
 
     res.status(200).json(sale);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao buscar venda por ID:", error.message);
+=======
+    console.error("Erro ao buscar venda por ID:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message });
   }
 }
@@ -88,7 +103,11 @@ async function updateSale(req, res) {
     
     res.status(200).json(updatedSale);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao atualizar venda:", error.message);
+=======
+    console.error("Erro ao atualizar venda:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message });
   }
 }
@@ -103,7 +122,11 @@ async function deleteSale(req, res) {
     await deleteSaleService(id);
     res.status(204).end();
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao excluir venda:", error.message);
+=======
+    console.error("Erro ao excluir venda:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message });
   }
 }
@@ -130,7 +153,11 @@ async function getMonthlyReport(req, res) {
     const report = await getMonthlyReportService(yearNum, monthNum);
     res.status(200).json(report);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao gerar relatório mensal:", error.message);
+=======
+    console.error("Erro ao gerar relatório mensal:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message });
   }
 }
@@ -140,7 +167,11 @@ async function getSalesSummary(req, res) {
     const summary = await getSalesSummaryService();
     res.status(200).json(summary);
   } catch (error) {
+<<<<<<< HEAD
     console.error("❌ Erro ao buscar resumo de vendas:", error.message);
+=======
+    console.error("Erro ao buscar resumo de vendas:", error.message);
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     res.status(500).json({ error: error.message });
   }
 }

@@ -1,10 +1,14 @@
 const { User } = require("../models/users");
 const { compare, hash } = require("bcryptjs");
+<<<<<<< HEAD
 const {
   generateToken,
   generateRefreshToken,
   verifyRefreshToken,
 } = require("../utils/jwt");
+=======
+const { generateToken, generateRefreshToken, verifyRefreshToken } = require("../utils/jwt");
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
 const { validateRequiredFields } = require("../utils/validationUtils");
 
 async function login(dto) {
@@ -12,7 +16,11 @@ async function login(dto) {
 
   validateRequiredFields({ email, password }, ["email", "password"]);
 
+<<<<<<< HEAD
   const user = await User.findOne({ email }).select("+password");
+=======
+  const user = await User.findOne({ email }).select('+password');
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
 
   if (!user) {
     throw new Error("Credenciais inválidas");
@@ -47,28 +55,46 @@ async function refreshToken(token) {
     throw new Error("Refresh token é obrigatório.");
   }
 
+<<<<<<< HEAD
+=======
+  // Validar o refresh token
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
   } catch (error) {
+<<<<<<< HEAD
     if (error.name === "TokenExpiredError") {
       throw new Error("Refresh token expirado.");
     } else if (error.name === "JsonWebTokenError") {
+=======
+    if (error.name === 'TokenExpiredError') {
+      throw new Error("Refresh token expirado.");
+    } else if (error.name === 'JsonWebTokenError') {
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
       throw new Error("Refresh token inválido.");
     } else {
       throw new Error("Erro ao validar refresh token.");
     }
   }
 
+<<<<<<< HEAD
   const user = await User.findOne({
     email: decoded.email,
     refreshTokens: token,
+=======
+  // Buscar usuário pelo email do token e verificar se o token está na lista
+  const user = await User.findOne({ 
+    email: decoded.email,
+    refreshTokens: token 
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
   });
 
   if (!user) {
     throw new Error("Refresh token inválido ou não encontrado.");
   }
 
+<<<<<<< HEAD
   const accessToken = generateToken({
     id: user._id,
     email: user.email,
@@ -78,8 +104,17 @@ async function refreshToken(token) {
     id: user._id,
     email: user.email,
   });
+=======
+  // Gerar novos tokens
+  const accessToken = generateToken({ email: user.email, role: user.role });
+  const newRefreshToken = generateRefreshToken({ email: user.email });
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
 
-  await User.updateOne({ _id: user._id }, { $pull: { refreshTokens: token } });
+  // Atualizar a lista de refresh tokens (primeiro remover o antigo, depois adicionar o novo)
+  await User.updateOne(
+    { _id: user._id },
+    { $pull: { refreshTokens: token } }
+  );
 
   await User.updateOne(
     { _id: user._id },
@@ -125,22 +160,35 @@ async function logout(token) {
     throw new Error("Refresh token é obrigatório para logout.");
   }
 
+<<<<<<< HEAD
+=======
+  // Validar o refresh token
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
   } catch (error) {
+<<<<<<< HEAD
     console.warn(
       "[WARNING] Tentativa de logout com refresh token inválido:",
       error.message
     );
   }
 
+=======
+    // Para logout, não vamos rejeitar tokens inválidos, apenas logar
+    console.warn("[WARNING] Tentativa de logout com refresh token inválido:", error.message);
+  }
+
+  // Remover o token da lista do usuário
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
   const result = await User.updateOne(
     { refreshTokens: token },
     { $pull: { refreshTokens: token } }
   );
 
   if (result.matchedCount === 0) {
+<<<<<<< HEAD
     console.warn(
       "[WARNING] Tentativa de logout com um refresh token não encontrado."
     );
@@ -149,6 +197,11 @@ async function logout(token) {
       "[INFO] Logout realizado com sucesso para usuário:",
       decoded?.email || "desconhecido"
     );
+=======
+    console.warn("[WARNING] Tentativa de logout com um refresh token não encontrado.");
+  } else {
+    console.log("[INFO] Logout realizado com sucesso para usuário:", decoded?.email || "desconhecido");
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
   }
 }
 

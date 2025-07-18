@@ -21,11 +21,14 @@
     "test:planner-simple": "node test/test-planner-simple.js",
     "test:scenarios": "node test/test-specific-scenarios.js",
     "test:refresh-token": "node test/test-refresh-token.js",
+<<<<<<< HEAD
     "test:frontend-integration": "node test/test-frontend-integration.js",
     "test:sales-frontend": "node test/test-sales-frontend.js",
     "test:sales-summary": "node test/test-sales-summary.js",
     "test:anamnese": "node test/test-anamnese.js",
     "test:sales-auth": "node test/test-sales-auth.js",
+=======
+>>>>>>> c059688763e76d95c86dc28f38f28595e0e21c71
     "create-test-user": "node test/create-test-user.js",
     "test:all": "npm run test:newrelic && npm run test:integration",
     "test:planner-all": "npm run test:planner && npm run test:planner-advanced && npm run test:planner-overlap",
