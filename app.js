@@ -1,4 +1,5 @@
 require("./newrelic-init.js");
+
 require("dotenv").config();
 const express = require("express");
 const rotaPacientes = require("./routes/pacientes");
