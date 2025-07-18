@@ -3,8 +3,14 @@ const {
   getPacientes,
   getPacienteById,
   updatePaciente,
+  getAnamnese,
+  createAnamnese,
+  updateAnamnese,
 } = require("../controllers/pacientes");
-const { createPacienteService, deletePacienteService } = require("../services/pacientes");
+const {
+  createPacienteService,
+  deletePacienteService,
+} = require("../services/pacientes");
 const { body, param, validationResult } = require("express-validator");
 const multer = require("multer");
 const router = express.Router();
@@ -22,26 +28,6 @@ router.get("/", async (req, res) => {
     await getPacientes(req, res);
   } catch (error) {
     console.error("Erro ao buscar pacientes:", error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-});
-
-router.get("/:id", validateId, async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  try {
-    const paciente = await getPacienteById(req.params.id);
-    if (!paciente) {
-      return res.status(404).json({ error: "Paciente não encontrado." });
-    }
-    res.status(200).json(paciente);
-  } catch (error) {
-    console.error("Erro ao buscar paciente:", error);
     if (!res.headersSent) {
       res.status(500).json({ error: error.message });
     }
@@ -110,6 +96,22 @@ router.post(
   }
 );
 
+router.get("/:id", validateId, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    await getPacienteById(req, res);
+  } catch (error) {
+    console.error("Erro ao buscar paciente:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 router.put("/:id", [validateId, validatePacienteData], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -138,6 +140,54 @@ router.delete("/:id", validateId, async (req, res) => {
   } catch (error) {
     console.error("Erro ao excluir paciente:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/:id/anamnese", validateId, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    await getAnamnese(req, res);
+  } catch (error) {
+    console.error("Erro ao buscar anamnese:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+router.post("/:id/anamnese", validateId, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    await createAnamnese(req, res);
+  } catch (error) {
+    console.error("Erro ao criar anamnese:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+router.put("/:id/anamnese", validateId, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    await updateAnamnese(req, res);
+  } catch (error) {
+    console.error("Erro ao atualizar anamnese:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 

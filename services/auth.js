@@ -1,6 +1,10 @@
 const { User } = require("../models/users");
 const { compare, hash } = require("bcryptjs");
-const { generateToken, generateRefreshToken } = require("../utils/jwt");
+const {
+  generateToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} = require("../utils/jwt");
 const { validateRequiredFields } = require("../utils/validationUtils");
 
 async function login(dto) {
@@ -8,7 +12,7 @@ async function login(dto) {
 
   validateRequiredFields({ email, password }, ["email", "password"]);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
     throw new Error("Credenciais inválidas");
@@ -20,10 +24,17 @@ async function login(dto) {
     throw new Error("Credenciais inválidas");
   }
 
-  const accessToken = generateToken({ email: user.email, role: user.role });
-  const refreshToken = generateRefreshToken({ email: user.email });
+  const accessToken = generateToken({
+    id: user._id,
+    email: user.email,
+    role: user.role,
+  });
+  const refreshToken = generateRefreshToken({
+    id: user._id,
+    email: user.email,
+  });
 
-  await User.findOneAndUpdate(
+  await User.updateOne(
     { email: user.email },
     { $push: { refreshTokens: refreshToken } }
   );
@@ -32,14 +43,41 @@ async function login(dto) {
 }
 
 async function refreshToken(token) {
-  const user = await User.findOne({ refreshTokens: token });
-
-  if (!user) {
-    throw new Error("Refresh token inválido.");
+  if (!token) {
+    throw new Error("Refresh token é obrigatório.");
   }
 
-  const accessToken = generateToken({ email: user.email, role: user.role });
-  const newRefreshToken = generateRefreshToken({ email: user.email });
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(token);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new Error("Refresh token expirado.");
+    } else if (error.name === "JsonWebTokenError") {
+      throw new Error("Refresh token inválido.");
+    } else {
+      throw new Error("Erro ao validar refresh token.");
+    }
+  }
+
+  const user = await User.findOne({
+    email: decoded.email,
+    refreshTokens: token,
+  });
+
+  if (!user) {
+    throw new Error("Refresh token inválido ou não encontrado.");
+  }
+
+  const accessToken = generateToken({
+    id: user._id,
+    email: user.email,
+    role: user.role,
+  });
+  const newRefreshToken = generateRefreshToken({
+    id: user._id,
+    email: user.email,
+  });
 
   await User.updateOne({ _id: user._id }, { $pull: { refreshTokens: token } });
 
@@ -83,17 +121,35 @@ async function register(dto) {
 }
 
 async function logout(token) {
-  const user = await User.findOne({ refreshTokens: token });
-
-  if (!user) {
-    console.warn("Tentativa de logout com um refresh token inválido.");
-    return;
+  if (!token) {
+    throw new Error("Refresh token é obrigatório para logout.");
   }
 
-  await User.findOneAndUpdate(
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(token);
+  } catch (error) {
+    console.warn(
+      "[WARNING] Tentativa de logout com refresh token inválido:",
+      error.message
+    );
+  }
+
+  const result = await User.updateOne(
     { refreshTokens: token },
     { $pull: { refreshTokens: token } }
   );
+
+  if (result.matchedCount === 0) {
+    console.warn(
+      "[WARNING] Tentativa de logout com um refresh token não encontrado."
+    );
+  } else {
+    console.log(
+      "[INFO] Logout realizado com sucesso para usuário:",
+      decoded?.email || "desconhecido"
+    );
+  }
 }
 
 module.exports = {

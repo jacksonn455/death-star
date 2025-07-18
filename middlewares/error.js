@@ -4,7 +4,8 @@ const errorMiddleware = (error, req, res, next) => {
   if (
     error.message.includes("inválido") ||
     error.message.includes("obrigatório") ||
-    error.message.includes("Já existe um agendamento")
+    error.message.includes("Já existe um agendamento") ||
+    error.message.includes("sobreposição de horários")
   ) {
     return res.status(400).json({ error: error.message });
   }

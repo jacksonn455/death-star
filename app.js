@@ -1,14 +1,18 @@
+require("./newrelic-init.js");
+
 require("dotenv").config();
 const express = require("express");
 const rotaPacientes = require("./routes/pacientes");
 const rotaAgendamento = require("./routes/planner");
 const rotaProdutos = require("./routes/products");
+const rotaVendas = require("./routes/sales");
 const rotaAuth = require("./routes/auth");
 const rotaHealth = require("./routes/health");
 const cors = require("cors");
 const dbConnect = require("./config/dbConnect.js");
 const { authMiddleware } = require("./middlewares/auth");
 const errorMiddleware = require("./middlewares/error");
+const { newRelicMiddleware } = require("./middlewares/newrelic");
 
 const app = express();
 
@@ -17,22 +21,6 @@ const allowedOrigins = [
   "https://death-star.onrender.com",
   "http://localhost:3000",
 ];
-
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    allowedOrigins.includes(req.headers.origin) ? req.headers.origin : ""
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
 
 app.use(
   cors({
@@ -44,14 +32,17 @@ app.use(
         callback(new Error("Acesso não permitido por CORS."));
       }
     },
-    methods: "GET,POST,PUT,DELETE",
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: "Content-Type,Authorization",
     credentials: true,
+    optionsSuccessStatus: 204,
   })
 );
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+app.use(newRelicMiddleware);
 
 const port = process.env.PORT || 8000;
 
@@ -66,7 +57,7 @@ const startServer = async () => {
     console.log("✅ Banco de dados conectado!");
 
     app.use((req, res, next) => {
-      const timeout = 15000;
+      const timeout = 8000;
       const timer = setTimeout(() => {
         console.error("⏳ Tempo limite atingido para", req.originalUrl);
         res.status(504).json({ error: "Tempo limite da requisição atingido." });
@@ -81,6 +72,7 @@ const startServer = async () => {
     app.use("/pacientes", authMiddleware, rotaPacientes);
     app.use("/agenda", authMiddleware, rotaAgendamento);
     app.use("/produtos", authMiddleware, rotaProdutos);
+    app.use("/vendas", authMiddleware, rotaVendas);
     app.use("/auth", rotaAuth);
 
     app.use(errorMiddleware);
@@ -89,6 +81,7 @@ const startServer = async () => {
       "/pacientes",
       "/agenda",
       "/produtos",
+      "/vendas",
       "/auth",
       "/health",
     ];
@@ -104,6 +97,7 @@ const startServer = async () => {
 
     app.listen(port, () => {
       console.log(`🚀 Servidor rodando na porta ${port}`);
+      console.log(`📊 New Relic monitoramento ativo`);
     });
   } catch (error) {
     console.error("❌ Falha ao iniciar o servidor:", error.message);
