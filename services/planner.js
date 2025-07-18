@@ -32,8 +32,12 @@ async function getAllPlanners(query) {
       };
     }
 
-    const startDate = moment(oldestPlanner.date).tz("America/Sao_Paulo").startOf("week");
-    const endDate = moment(newestPlanner.date).tz("America/Sao_Paulo").endOf("week");
+    const startDate = moment(oldestPlanner.date)
+      .tz("America/Sao_Paulo")
+      .startOf("week");
+    const endDate = moment(newestPlanner.date)
+      .tz("America/Sao_Paulo")
+      .endOf("week");
     const currentWeek = moment().tz("America/Sao_Paulo").startOf("week");
     const totalWeeks = Math.ceil(endDate.diff(startDate, "weeks", true));
     const currentPage =
@@ -65,7 +69,7 @@ async function getAllPlanners(query) {
 
     if (nextAppointments === "true") {
       const now = moment().tz("America/Sao_Paulo");
-      const startOfDay = now.clone().startOf('day');
+      const startOfDay = now.clone().startOf("day");
       filters.date = {
         $gte: startOfDay.format("YYYY-MM-DD"),
         $lte: now.clone().endOf("day").format("YYYY-MM-DD"),
@@ -102,10 +106,9 @@ async function updatePlannerService(id, data) {
     validateRequiredFields(data, ["date", "time"]);
     const planner = await getPlannerByIdService(id);
     validatePlanner(planner, id);
-    
-    // Validar conflitos excluindo o agendamento atual
+
     await validateExistingPlanner(data.date, data.time, id);
-    
+
     await googleCalendarService.updateEventInCalendar(planner.eventId, data);
     return await Planner.findByIdAndUpdate(id, data, { new: true });
   } catch (error) {
@@ -126,64 +129,97 @@ async function deletePlannerService(id) {
 }
 
 async function validateExistingPlanner(date, time, excludeId = null) {
-  console.log(`🔍 DEBUG: Validando agendamento - Data: ${date}, Hora: ${time}, ExcludeId: ${excludeId}`);
-  console.log(`🔍 DEBUG: Tipo do excludeId: ${typeof excludeId}, Valor: ${excludeId}`);
-  
-  // Verificar conflito exato primeiro
+  console.log(
+    `🔍 DEBUG: Validando agendamento - Data: ${date}, Hora: ${time}, ExcludeId: ${excludeId}`
+  );
+  console.log(
+    `🔍 DEBUG: Tipo do excludeId: ${typeof excludeId}, Valor: ${excludeId}`
+  );
+
   const exactQuery = { date, time };
   if (excludeId) {
     exactQuery._id = { $ne: excludeId };
     console.log(`🔍 DEBUG: Excluindo ID: ${excludeId} da validação`);
   }
-  
+
   console.log(`🔍 DEBUG: Query de conflito exato:`, exactQuery);
   const exactConflict = await Planner.findOne(exactQuery);
-  console.log(`🔍 DEBUG: Conflito exato encontrado:`, exactConflict ? 'SIM' : 'NÃO');
-  
+  console.log(
+    `🔍 DEBUG: Conflito exato encontrado:`,
+    exactConflict ? "SIM" : "NÃO"
+  );
+
   if (exactConflict) {
-    console.log(`🔍 DEBUG: Conflito exato detectado - ID: ${exactConflict._id}, Data: ${exactConflict.date}, Hora: ${exactConflict.time}`);
-    console.log(`🔍 DEBUG: Comparando horários - Novo: "${time}", Existente: "${exactConflict.time}"`);
+    console.log(
+      `🔍 DEBUG: Conflito exato detectado - ID: ${exactConflict._id}, Data: ${exactConflict.date}, Hora: ${exactConflict.time}`
+    );
+    console.log(
+      `🔍 DEBUG: Comparando horários - Novo: "${time}", Existente: "${exactConflict.time}"`
+    );
     console.log(`🔍 DEBUG: São iguais? ${time === exactConflict.time}`);
     throw new Error("Já existe um agendamento para essa data e horário.");
   }
 
-  // Verificar sobreposições parciais
   const appointmentStart = moment.tz(`${date}T${time}`, "America/Sao_Paulo");
   const appointmentEnd = appointmentStart.clone().add(1, "hour");
-  
-  console.log(`🔍 DEBUG: Novo agendamento - Início: ${appointmentStart.format('YYYY-MM-DD HH:mm')}, Fim: ${appointmentEnd.format('YYYY-MM-DD HH:mm')}`);
-  
-  // Buscar todos os agendamentos na mesma data
+
+  console.log(
+    `🔍 DEBUG: Novo agendamento - Início: ${appointmentStart.format(
+      "YYYY-MM-DD HH:mm"
+    )}, Fim: ${appointmentEnd.format("YYYY-MM-DD HH:mm")}`
+  );
+
   const sameDateQuery = { date };
   if (excludeId) {
     sameDateQuery._id = { $ne: excludeId };
   }
-  
-  console.log(`🔍 DEBUG: Query para agendamentos na mesma data:`, sameDateQuery);
+
+  console.log(
+    `🔍 DEBUG: Query para agendamentos na mesma data:`,
+    sameDateQuery
+  );
   const allPlannersOnDate = await Planner.find(sameDateQuery);
-  console.log(`🔍 DEBUG: Agendamentos encontrados na mesma data: ${allPlannersOnDate.length}`);
-  
-  // Verificar sobreposições com cada agendamento existente
+  console.log(
+    `🔍 DEBUG: Agendamentos encontrados na mesma data: ${allPlannersOnDate.length}`
+  );
+
   for (const planner of allPlannersOnDate) {
-    const existingStart = moment.tz(`${planner.date}T${planner.time}`, "America/Sao_Paulo");
+    const existingStart = moment.tz(
+      `${planner.date}T${planner.time}`,
+      "America/Sao_Paulo"
+    );
     const existingEnd = existingStart.clone().add(1, "hour");
-    
-    console.log(`🔍 DEBUG: Verificando agendamento existente - ID: ${planner._id}, Início: ${existingStart.format('YYYY-MM-DD HH:mm')}, Fim: ${existingEnd.format('YYYY-MM-DD HH:mm')}`);
-    console.log(`🔍 DEBUG: Horário existente: "${planner.time}", Novo horário: "${time}"`);
-    
-    // Verificar se há sobreposição
-    // Sobreposição ocorre quando:
-    // 1. O novo agendamento começa antes do existente terminar E
-    // 2. O novo agendamento termina depois do existente começar
-    const hasOverlap = appointmentStart.isBefore(existingEnd) && appointmentEnd.isAfter(existingStart);
-    console.log(`🔍 DEBUG: Sobreposição detectada: ${hasOverlap ? 'SIM' : 'NÃO'}`);
-    
+
+    console.log(
+      `🔍 DEBUG: Verificando agendamento existente - ID: ${
+        planner._id
+      }, Início: ${existingStart.format(
+        "YYYY-MM-DD HH:mm"
+      )}, Fim: ${existingEnd.format("YYYY-MM-DD HH:mm")}`
+    );
+    console.log(
+      `🔍 DEBUG: Horário existente: "${planner.time}", Novo horário: "${time}"`
+    );
+
+    const hasOverlap =
+      appointmentStart.isBefore(existingEnd) &&
+      appointmentEnd.isAfter(existingStart);
+    console.log(
+      `🔍 DEBUG: Sobreposição detectada: ${hasOverlap ? "SIM" : "NÃO"}`
+    );
+
     if (hasOverlap) {
-      console.log(`🔍 DEBUG: Sobreposição encontrada! Novo: ${appointmentStart.format('HH:mm')}-${appointmentEnd.format('HH:mm')}, Existente: ${existingStart.format('HH:mm')}-${existingEnd.format('HH:mm')}`);
+      console.log(
+        `🔍 DEBUG: Sobreposição encontrada! Novo: ${appointmentStart.format(
+          "HH:mm"
+        )}-${appointmentEnd.format("HH:mm")}, Existente: ${existingStart.format(
+          "HH:mm"
+        )}-${existingEnd.format("HH:mm")}`
+      );
       throw new Error("Existe sobreposição de horários com outro agendamento.");
     }
   }
-  
+
   console.log(`🔍 DEBUG: Validação concluída - Nenhum conflito encontrado`);
 }
 

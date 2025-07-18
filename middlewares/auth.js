@@ -3,10 +3,11 @@ const {
   TokenExpiredError,
   JsonWebTokenError,
 } = require("jsonwebtoken");
+const { User } = require("../models/users");
 
 const jsonSecret = process.env.JSON_SECRET;
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -19,9 +20,20 @@ function authMiddleware(req, res, next) {
 
   try {
     const decoded = verify(token, jsonSecret);
+
+    if (!decoded.id && decoded.email) {
+      const user = await User.findOne({ email: decoded.email });
+      if (user) {
+        decoded.id = user._id;
+      } else {
+        return res.status(401).json({ message: "Usuário não encontrado" });
+      }
+    }
+
     req.user = decoded;
     next();
   } catch (error) {
+    console.error("❌ Erro na autenticação:", error.message);
     if (error instanceof TokenExpiredError) {
       return res.status(401).json({ message: "Token expirado" });
     } else if (error instanceof JsonWebTokenError) {
