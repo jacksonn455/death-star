@@ -8,7 +8,7 @@ async function login(dto) {
 
   validateRequiredFields({ email, password }, ["email", "password"]);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select('+password');
 
   if (!user) {
     throw new Error("Credenciais inválidas");
@@ -23,7 +23,7 @@ async function login(dto) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const refreshToken = generateRefreshToken({ email: user.email });
 
-  await User.findOneAndUpdate(
+  await User.updateOne(
     { email: user.email },
     { $push: { refreshTokens: refreshToken } }
   );
@@ -41,11 +41,12 @@ async function refreshToken(token) {
   const accessToken = generateToken({ email: user.email, role: user.role });
   const newRefreshToken = generateRefreshToken({ email: user.email });
 
-  await User.updateOne({ _id: user._id }, { $pull: { refreshTokens: token } });
-
   await User.updateOne(
     { _id: user._id },
-    { $push: { refreshTokens: newRefreshToken } }
+    { 
+      $pull: { refreshTokens: token },
+      $push: { refreshTokens: newRefreshToken }
+    }
   );
 
   return { accessToken, refreshToken: newRefreshToken };
@@ -83,17 +84,15 @@ async function register(dto) {
 }
 
 async function logout(token) {
-  const user = await User.findOne({ refreshTokens: token });
 
-  if (!user) {
-    console.warn("Tentativa de logout com um refresh token inválido.");
-    return;
-  }
-
-  await User.findOneAndUpdate(
+  const result = await User.updateOne(
     { refreshTokens: token },
     { $pull: { refreshTokens: token } }
   );
+
+  if (result.matchedCount === 0) {
+    console.warn("Tentativa de logout com um refresh token inválido.");
+  }
 }
 
 module.exports = {
