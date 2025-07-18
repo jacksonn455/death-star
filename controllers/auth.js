@@ -37,9 +37,15 @@ async function registerController(req, res, next) {
 async function logoutController(req, res, next) {
   try {
     const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({ error: "Refresh token é obrigatório para logout." });
+    }
+
     await logout(refreshToken);
     res.status(200).json({ message: "Logout realizado com sucesso" });
   } catch (error) {
+    console.error("[ERROR] Erro no logout:", error.message);
     next(error);
   }
 }
