@@ -1,69 +1,58 @@
-const axios = require('axios');
+require('dotenv').config();
+const mongoose = require('mongoose');
+const { hash } = require('bcryptjs');
+const { User } = require('../models/users');
 
-const API_BASE_URL = 'http://localhost:8000';
+const { MONGO_URI } = process.env;
 
 async function createTestUser() {
-  console.log('🔧 Criando usuário de teste...\n');
-
   try {
+    console.log('🔗 Conectando ao MongoDB...');
+    await mongoose.connect(MONGO_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false,
+    });
+    console.log('✅ Conectado ao MongoDB');
+
+    // Verificar se usuário já existe
+    const existingUser = await User.findOne({ email: 'test@example.com' });
+    
+    if (existingUser) {
+      console.log('✅ Usuário de teste já existe');
+      console.log('   Email: test@example.com');
+      console.log('   Senha: test123');
+      return;
+    }
+
     // Criar usuário de teste
-    console.log('1️⃣ Registrando usuário de teste...');
-    const registerResponse = await axios.post(`${API_BASE_URL}/auth/register`, {
-      name: "Usuário Teste",
-      email: "test@example.com",
-      password: "test123",
-      role: "admin"
-    });
+    const hashedPassword = await hash('test123', 10);
     
-    console.log('✅ Usuário de teste criado com sucesso');
-    console.log('   - Email: test@example.com');
-    console.log('   - Senha: test123');
-
-    // Testar login
-    console.log('\n2️⃣ Testando login...');
-    const loginResponse = await axios.post(`${API_BASE_URL}/auth/login`, {
-      email: "test@example.com",
-      password: "test123"
+    const testUser = new User({
+      name: 'Usuário Teste',
+      email: 'test@example.com',
+      password: hashedPassword,
+      role: 'admin'
     });
-    
-    const { accessToken } = loginResponse.data;
-    console.log('✅ Login realizado com sucesso');
-    console.log('   - Token obtido:', accessToken ? 'Sim' : 'Não');
 
-    console.log('\n🎉 Usuário de teste configurado com sucesso!');
+    await testUser.save();
+    
+    console.log('✅ Usuário de teste criado com sucesso!');
+    console.log('   Email: test@example.com');
+    console.log('   Senha: test123');
+    console.log('   Role: admin');
 
   } catch (error) {
-    if (error.response?.status === 409) {
-      console.log('ℹ️ Usuário de teste já existe, testando login...');
-      
-      try {
-        const loginResponse = await axios.post(`${API_BASE_URL}/auth/login`, {
-          email: "test@example.com",
-          password: "test123"
-        });
-        
-        const { accessToken } = loginResponse.data;
-        console.log('✅ Login realizado com sucesso');
-        console.log('   - Token obtido:', accessToken ? 'Sim' : 'Não');
-        console.log('\n🎉 Usuário de teste já está configurado!');
-      } catch (loginError) {
-        console.error('❌ Erro no login:', loginError.response?.data || loginError.message);
-        process.exit(1);
-      }
-    } else {
-      console.error('❌ Erro ao criar usuário de teste:');
-      console.error('Status:', error.response?.status);
-      console.error('Status Text:', error.response?.statusText);
-      console.error('Data:', error.response?.data);
-      console.error('Message:', error.message);
-      process.exit(1);
-    }
+    console.error('❌ Erro ao criar usuário de teste:', error.message);
+  } finally {
+    await mongoose.disconnect();
+    console.log('🔌 Desconectado do MongoDB');
   }
 }
 
-// Executar se chamado diretamente
 if (require.main === module) {
   createTestUser();
 }
 
-module.exports = { createTestUser }; 
+module.exports = { createTestUser };

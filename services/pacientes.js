@@ -84,8 +84,10 @@ async function deletePacienteService(id) {
       try {
         await deleteImageFromCloudinary(paciente.image);
       } catch (err) {
-        console.warn('⚠️ Falha ao deletar a imagem do Cloudinary:', err.message);
-        // Continua mesmo se falhar
+        console.warn(
+          "⚠️ Falha ao deletar a imagem do Cloudinary:",
+          err.message
+        );
       }
     }
 

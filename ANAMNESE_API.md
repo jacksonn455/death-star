@@ -7,6 +7,7 @@ A API de Anamnese permite gerenciar dados completos de anamnese facial para paci
 ## Endpoints
 
 ### 1. Buscar Anamnese
+
 ```
 GET /api/pacientes/:id/anamnese
 ```
@@ -14,9 +15,11 @@ GET /api/pacientes/:id/anamnese
 **Descrição:** Busca a anamnese completa de um paciente específico.
 
 **Parâmetros:**
+
 - `id` (path): ID do paciente (MongoDB ObjectId)
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "nome": "Maria Silva",
@@ -88,8 +91,8 @@ GET /api/pacientes/:id/anamnese
   "tratamentoSugerido": {
     "tratamento": "Peeling + Preenchimento",
     "numeroSessao": 8,
-    "valorSessao": 312.50,
-    "valorTotal": 2500.00,
+    "valorSessao": 312.5,
+    "valorTotal": 2500.0,
     "preAgendamento": "15/01/2024",
     "horario": "14:00"
   },
@@ -108,6 +111,7 @@ GET /api/pacientes/:id/anamnese
 ```
 
 ### 2. Criar Anamnese
+
 ```
 POST /api/pacientes/:id/anamnese
 ```
@@ -115,19 +119,21 @@ POST /api/pacientes/:id/anamnese
 **Descrição:** Cria ou atualiza a anamnese completa de um paciente.
 
 **Parâmetros:**
+
 - `id` (path): ID do paciente (MongoDB ObjectId)
 - `body`: Dados completos da anamnese (mesma estrutura da resposta acima)
 
 **Resposta de Sucesso (201):**
+
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
-  "nome": "Maria Silva",
-  // ... todos os campos da anamnese
+  "nome": "Maria Silva"
 }
 ```
 
 ### 3. Atualizar Anamnese
+
 ```
 PUT /api/pacientes/:id/anamnese
 ```
@@ -135,21 +141,23 @@ PUT /api/pacientes/:id/anamnese
 **Descrição:** Atualiza a anamnese existente de um paciente.
 
 **Parâmetros:**
+
 - `id` (path): ID do paciente (MongoDB ObjectId)
 - `body`: Dados atualizados da anamnese
 
 **Resposta de Sucesso (200):**
+
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
-  "nome": "Maria Silva",
-  // ... todos os campos atualizados
+  "nome": "Maria Silva"
 }
 ```
 
 ## Estrutura dos Dados
 
 ### Informações Pessoais
+
 - `nome` (String, obrigatório): Nome completo do paciente
 - `idade` (Number, obrigatório): Idade do paciente
 - `profissao` (String): Profissão do paciente
@@ -163,19 +171,23 @@ PUT /api/pacientes/:id/anamnese
 - `image` (String): URL da foto do paciente
 
 ### Primeira Consulta
+
 - `queixa` (String): Queixa principal do paciente
 - `soubeDoTrabalho` (String): Como soube do trabalho
 
 ### Histórico da Queixa
+
 - `inicioQueixa` (String): Quando começou a queixa
 - `intensificacaoQueixa` (String): Quando se intensificou
 - `tratamentosAnteriores` (String): Tratamentos realizados anteriormente
 - `usoProdutos` (String): Produtos utilizados
 
 ### Histórico de Patologias
+
 - `patologias` (Array[String]): Lista de patologias
 
 ### Conhecendo Mais Sobre Você
+
 - `funcionamentoIntestinal` (String): Funcionamento intestinal
 - `gestante` (String): Se é gestante
 - `contraceptivo` (String): Método contraceptivo
@@ -187,6 +199,7 @@ PUT /api/pacientes/:id/anamnese
 - `exercicio` (String): Frequência de exercícios
 
 ### Hábitos e Alimentação
+
 - `tabagista` (String): Se é tabagista
 - `alcool` (String): Consumo de álcool
 - `covid` (String): Histórico de COVID-19
@@ -206,6 +219,7 @@ PUT /api/pacientes/:id/anamnese
 - `intolerancia` (String): Intolerâncias alimentares
 
 ### Condições da Pele
+
 - `melasma` (String): Tipo de melasma
 - `manchas` (Array[String]): Tipos de manchas
 - `linhas` (Array[String]): Localização das linhas de expressão
@@ -218,6 +232,7 @@ PUT /api/pacientes/:id/anamnese
 - `tipoOlheiras` (Array[String]): Tipos de olheiras
 
 ### Tratamento
+
 - `tratamento.diagnostico` (String): Diagnóstico
 - `tratamento.descricao` (String): Descrição do tratamento
 - `tratamento.conduta` (String): Conduta do tratamento
@@ -228,6 +243,7 @@ PUT /api/pacientes/:id/anamnese
 - `tratamento.termosAceitos.termo2` (Boolean): Aceite do termo 2
 
 ### Tratamento Sugerido
+
 - `tratamentoSugerido.tratamento` (String): Nome do tratamento
 - `tratamentoSugerido.numeroSessao` (Number): Número de sessões
 - `tratamentoSugerido.valorSessao` (Number): Valor por sessão
@@ -236,6 +252,7 @@ PUT /api/pacientes/:id/anamnese
 - `tratamentoSugerido.horario` (String): Horário do agendamento
 
 ### Contrato e Assinaturas
+
 - `contratoAssinaturas` (Array): Array de assinaturas do contrato
 - `contractSignatures.clientSignature` (String): Assinatura do cliente
 - `contractSignatures.providerSignature` (String): Assinatura do profissional
@@ -249,8 +266,9 @@ PUT /api/pacientes/:id/anamnese
 ## Exemplo de Uso
 
 ### Criar Anamnese Completa
+
 ```javascript
-const axios = require('axios');
+const axios = require("axios");
 
 const anamneseData = {
   nome: "Maria Silva",
@@ -258,24 +276,24 @@ const anamneseData = {
   profissao: "Advogada",
   dataNascimento: "1988-05-15",
   queixa: "Manchas escuras no rosto",
-  // ... outros campos
 };
 
 const response = await axios.post(
-  'http://localhost:3001/api/pacientes/507f1f77bcf86cd799439011/anamnese',
+  "http://localhost:3001/api/pacientes/507f1f77bcf86cd799439011/anamnese",
   anamneseData
 );
 
-console.log('Anamnese criada:', response.data);
+console.log("Anamnese criada:", response.data);
 ```
 
 ### Buscar Anamnese
+
 ```javascript
 const response = await axios.get(
-  'http://localhost:3001/api/pacientes/507f1f77bcf86cd799439011/anamnese'
+  "http://localhost:3001/api/pacientes/507f1f77bcf86cd799439011/anamnese"
 );
 
-console.log('Anamnese:', response.data);
+console.log("Anamnese:", response.data);
 ```
 
 ## Testes
@@ -287,6 +305,7 @@ npm run test:anamnese
 ```
 
 Este comando irá:
+
 1. Criar um paciente básico
 2. Criar uma anamnese completa
 3. Buscar e validar a anamnese
@@ -301,4 +320,4 @@ Este comando irá:
 3. **Datas**: Use formato ISO para datas (YYYY-MM-DD)
 4. **Valores**: Valores monetários podem ser strings ou números
 5. **Campos Opcionais**: Apenas `nome`, `idade` e `dataNascimento` são obrigatórios
-6. **Atualizações**: O middleware atualiza automaticamente o campo `updatedAt` 
+6. **Atualizações**: O middleware atualiza automaticamente o campo `updatedAt`

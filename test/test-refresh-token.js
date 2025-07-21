@@ -1,99 +1,103 @@
-const axios = require('axios');
+const axios = require("axios");
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8000';
-const TEST_EMAIL = 'admin@test.com';
-const TEST_PASSWORD = 'admin123';
+const BASE_URL = process.env.BASE_URL || "http://localhost:8000";
+const TEST_EMAIL = "admin@test.com";
+const TEST_PASSWORD = "admin123";
 
 async function testRefreshToken() {
-  console.log('🧪 Testando sistema de Refresh Token...\n');
+  console.log("🧪 Testando sistema de Refresh Token...\n");
 
   try {
-    // 1. Fazer login para obter tokens
-    console.log('1️⃣ Fazendo login...');
+    console.log("1️⃣ Fazendo login...");
     const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
       email: TEST_EMAIL,
-      password: TEST_PASSWORD
+      password: TEST_PASSWORD,
     });
 
     const { accessToken, refreshToken } = loginResponse.data;
-    console.log('✅ Login realizado com sucesso');
+    console.log("✅ Login realizado com sucesso");
     console.log(`📝 Access Token: ${accessToken.substring(0, 20)}...`);
     console.log(`🔄 Refresh Token: ${refreshToken.substring(0, 20)}...\n`);
 
-    // 2. Testar refresh token válido
-    console.log('2️⃣ Testando refresh token válido...');
+    console.log("2️⃣ Testando refresh token válido...");
     const refreshResponse = await axios.post(`${BASE_URL}/auth/refresh-token`, {
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
     });
 
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data;
-    console.log('✅ Refresh token válido processado com sucesso');
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      refreshResponse.data;
+    console.log("✅ Refresh token válido processado com sucesso");
     console.log(`📝 Novo Access Token: ${newAccessToken.substring(0, 20)}...`);
-    console.log(`🔄 Novo Refresh Token: ${newRefreshToken.substring(0, 20)}...\n`);
+    console.log(
+      `🔄 Novo Refresh Token: ${newRefreshToken.substring(0, 20)}...\n`
+    );
 
-    // 3. Testar refresh token inválido
-    console.log('3️⃣ Testando refresh token inválido...');
+    console.log("3️⃣ Testando refresh token inválido...");
     try {
       await axios.post(`${BASE_URL}/auth/refresh-token`, {
-        refreshToken: 'invalid_token_here'
+        refreshToken: "invalid_token_here",
       });
-      console.log('❌ Erro: Deveria ter rejeitado token inválido');
+      console.log("❌ Erro: Deveria ter rejeitado token inválido");
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        console.log('✅ Token inválido rejeitado corretamente');
+        console.log("✅ Token inválido rejeitado corretamente");
       } else {
-        console.log('❌ Erro inesperado:', error.response?.data || error.message);
+        console.log(
+          "❌ Erro inesperado:",
+          error.response?.data || error.message
+        );
       }
     }
 
-    // 4. Testar refresh token vazio
-    console.log('\n4️⃣ Testando refresh token vazio...');
+    console.log("\n4️⃣ Testando refresh token vazio...");
     try {
       await axios.post(`${BASE_URL}/auth/refresh-token`, {
-        refreshToken: ''
+        refreshToken: "",
       });
-      console.log('❌ Erro: Deveria ter rejeitado token vazio');
+      console.log("❌ Erro: Deveria ter rejeitado token vazio");
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.log('✅ Token vazio rejeitado corretamente');
+        console.log("✅ Token vazio rejeitado corretamente");
       } else {
-        console.log('❌ Erro inesperado:', error.response?.data || error.message);
+        console.log(
+          "❌ Erro inesperado:",
+          error.response?.data || error.message
+        );
       }
     }
 
-    // 5. Testar logout
-    console.log('\n5️⃣ Testando logout...');
+    console.log("\n5️⃣ Testando logout...");
     const logoutResponse = await axios.post(`${BASE_URL}/auth/logout`, {
-      refreshToken: newRefreshToken
+      refreshToken: newRefreshToken,
     });
-    console.log('✅ Logout realizado com sucesso');
+    console.log("✅ Logout realizado com sucesso");
 
-    // 6. Tentar usar refresh token após logout
-    console.log('\n6️⃣ Testando refresh token após logout...');
+    console.log("\n6️⃣ Testando refresh token após logout...");
     try {
       await axios.post(`${BASE_URL}/auth/refresh-token`, {
-        refreshToken: newRefreshToken
+        refreshToken: newRefreshToken,
       });
-      console.log('❌ Erro: Deveria ter rejeitado token após logout');
+      console.log("❌ Erro: Deveria ter rejeitado token após logout");
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        console.log('✅ Token após logout rejeitado corretamente');
+        console.log("✅ Token após logout rejeitado corretamente");
       } else {
-        console.log('❌ Erro inesperado:', error.response?.data || error.message);
+        console.log(
+          "❌ Erro inesperado:",
+          error.response?.data || error.message
+        );
       }
     }
 
-    console.log('\n🎉 Todos os testes de refresh token passaram!');
-
+    console.log("\n🎉 Todos os testes de refresh token passaram!");
   } catch (error) {
-    console.error('❌ Erro no teste:', error.response?.data || error.message);
+    console.error("❌ Erro no teste:", error.response?.data || error.message);
     process.exit(1);
   }
 }
 
-// Executar teste se este arquivo for executado diretamente
 if (require.main === module) {
   testRefreshToken();
 }
 
-module.exports = { testRefreshToken }; 
+module.exports = { testRefreshToken };

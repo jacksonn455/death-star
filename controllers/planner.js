@@ -36,6 +36,7 @@ async function createPlanner(req, res, next) {
     const requiredFields = [
       "date",
       "time",
+      "endTime",
       "service",
       "paciente",
       "responsible",
@@ -52,6 +53,8 @@ async function createPlanner(req, res, next) {
 async function updatePlanner(req, res, next) {
   try {
     validateId(String(req.params.id));
+    const requiredFields = ["date", "time", "endTime"];
+    validateRequiredFields(req.body, requiredFields);
     const updatedPlanner = await updatePlannerService(req.params.id, req.body);
     res.status(200).send(updatedPlanner);
   } catch (error) {

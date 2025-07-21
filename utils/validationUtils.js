@@ -92,6 +92,8 @@ const handleValidationErrors = (req, res, next) => {
 const validatePlannerData = [
   body("date").isISO8601().withMessage("Data inválida"),
   body("time").matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage("Hora inválida"),
+  body("endDate").optional().isISO8601().withMessage("Data de término inválida"),
+  body("endTime").optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage("Hora de término inválida"),
   body("paciente").isString().notEmpty().withMessage("Paciente é obrigatório"),
 ];
 

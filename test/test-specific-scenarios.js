@@ -20,11 +20,14 @@ class SpecificScenariosTest {
     try {
       const loginData = {
         email: "admin@test.com",
-        password: "admin123"
+        password: "admin123",
       };
 
-      const response = await axios.post(`${this.baseURL}/auth/login`, loginData);
-      
+      const response = await axios.post(
+        `${this.baseURL}/auth/login`,
+        loginData
+      );
+
       if (response.status === 200 && response.data.accessToken) {
         this.accessToken = response.data.accessToken;
         console.log("✅ Autenticação realizada com sucesso");
@@ -41,8 +44,8 @@ class SpecificScenariosTest {
    */
   getAuthHeaders() {
     return {
-      'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${this.accessToken}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -50,10 +53,11 @@ class SpecificScenariosTest {
    * Cenário 1: Criar agendamento e tentar criar outro no mesmo horário
    */
   async testScenario1_SameTimeCreation() {
-    console.log("\n🔍 CENÁRIO 1: Criar agendamento e tentar criar outro no mesmo horário");
-    
+    console.log(
+      "\n🔍 CENÁRIO 1: Criar agendamento e tentar criar outro no mesmo horário"
+    );
+
     try {
-      // Criar primeiro agendamento
       const firstAppointment = {
         paciente: "Ana Silva",
         service: "Consulta",
@@ -61,19 +65,18 @@ class SpecificScenariosTest {
         responsible: "Dr. Maria",
         notes: "Primeira consulta",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "10:00"
+        time: "10:00",
       };
 
       const response1 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         firstAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response1.data._id);
       console.log("✅ Primeiro agendamento criado");
 
-      // Tentar criar segundo agendamento no mesmo horário
       const secondAppointment = {
         paciente: "João Santos",
         service: "Retorno",
@@ -81,30 +84,32 @@ class SpecificScenariosTest {
         responsible: "Dr. João",
         notes: "Retorno mensal",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "10:00" // MESMO HORÁRIO!
+        time: "10:00",
       };
 
       try {
-        await axios.post(
-          `${this.baseURL}/agenda`, 
-          secondAppointment,
-          { headers: this.getAuthHeaders() }
+        await axios.post(`${this.baseURL}/agenda`, secondAppointment, {
+          headers: this.getAuthHeaders(),
+        });
+
+        console.log(
+          "❌ ERRO: Segundo agendamento foi aceito quando deveria ser rejeitado!"
         );
-        
-        console.log("❌ ERRO: Segundo agendamento foi aceito quando deveria ser rejeitado!");
         this.results.push({
           test: "Scenario 1: Same Time Creation",
           status: "FAIL",
-          details: "Segundo agendamento no mesmo horário foi aceito"
+          details: "Segundo agendamento no mesmo horário foi aceito",
         });
         return false;
       } catch (error) {
         if (error.response && error.response.status === 400) {
-          console.log("✅ SUCESSO: Segundo agendamento foi rejeitado corretamente!");
+          console.log(
+            "✅ SUCESSO: Segundo agendamento foi rejeitado corretamente!"
+          );
           this.results.push({
             test: "Scenario 1: Same Time Creation",
             status: "PASS",
-            details: "Conflito detectado: " + error.response.data.error
+            details: "Conflito detectado: " + error.response.data.error,
           });
           return true;
         } else {
@@ -112,7 +117,7 @@ class SpecificScenariosTest {
           this.results.push({
             test: "Scenario 1: Same Time Creation",
             status: "FAIL",
-            details: "Erro inesperado: " + error.message
+            details: "Erro inesperado: " + error.message,
           });
           return false;
         }
@@ -122,7 +127,7 @@ class SpecificScenariosTest {
       this.results.push({
         test: "Scenario 1: Same Time Creation",
         status: "FAIL",
-        details: "Erro ao criar primeiro agendamento: " + error.message
+        details: "Erro ao criar primeiro agendamento: " + error.message,
       });
       return false;
     }
@@ -132,10 +137,11 @@ class SpecificScenariosTest {
    * Cenário 2: Criar agendamento e tentar atualizar outro para o mesmo horário
    */
   async testScenario2_UpdateToExistingTime() {
-    console.log("\n🔍 CENÁRIO 2: Criar agendamento e tentar atualizar outro para o mesmo horário");
-    
+    console.log(
+      "\n🔍 CENÁRIO 2: Criar agendamento e tentar atualizar outro para o mesmo horário"
+    );
+
     try {
-      // Criar primeiro agendamento
       const firstAppointment = {
         paciente: "Maria Costa",
         service: "Avaliação",
@@ -143,19 +149,18 @@ class SpecificScenariosTest {
         responsible: "Dr. Ana",
         notes: "Avaliação inicial",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "14:00"
+        time: "14:00",
       };
 
       const response1 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         firstAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response1.data._id);
       console.log("✅ Primeiro agendamento criado");
 
-      // Criar segundo agendamento em horário diferente
       const secondAppointment = {
         paciente: "Pedro Lima",
         service: "Consulta",
@@ -163,36 +168,37 @@ class SpecificScenariosTest {
         responsible: "Dr. Carlos",
         notes: "Consulta de rotina",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "15:00" // Horário diferente
+        time: "15:00",
       };
 
       const response2 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         secondAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response2.data._id);
       console.log("✅ Segundo agendamento criado em horário diferente");
 
-      // Tentar atualizar o segundo agendamento para o horário do primeiro
       const updateData = {
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "14:00" // MESMO HORÁRIO DO PRIMEIRO!
+        time: "14:00",
       };
 
       try {
         await axios.put(
-          `${this.baseURL}/agenda/${response2.data._id}`, 
+          `${this.baseURL}/agenda/${response2.data._id}`,
           updateData,
           { headers: this.getAuthHeaders() }
         );
-        
-        console.log("❌ ERRO: Atualização foi aceita quando deveria ser rejeitada!");
+
+        console.log(
+          "❌ ERRO: Atualização foi aceita quando deveria ser rejeitada!"
+        );
         this.results.push({
           test: "Scenario 2: Update To Existing Time",
           status: "FAIL",
-          details: "Atualização para horário ocupado foi aceita"
+          details: "Atualização para horário ocupado foi aceita",
         });
         return false;
       } catch (error) {
@@ -201,7 +207,8 @@ class SpecificScenariosTest {
           this.results.push({
             test: "Scenario 2: Update To Existing Time",
             status: "PASS",
-            details: "Conflito na atualização detectado: " + error.response.data.error
+            details:
+              "Conflito na atualização detectado: " + error.response.data.error,
           });
           return true;
         } else {
@@ -209,7 +216,7 @@ class SpecificScenariosTest {
           this.results.push({
             test: "Scenario 2: Update To Existing Time",
             status: "FAIL",
-            details: "Erro inesperado: " + error.message
+            details: "Erro inesperado: " + error.message,
           });
           return false;
         }
@@ -219,7 +226,7 @@ class SpecificScenariosTest {
       this.results.push({
         test: "Scenario 2: Update To Existing Time",
         status: "FAIL",
-        details: "Erro: " + error.message
+        details: "Erro: " + error.message,
       });
       return false;
     }
@@ -229,10 +236,11 @@ class SpecificScenariosTest {
    * Cenário 3: Sobreposição parcial - agendamento anterior termina durante o novo
    */
   async testScenario3_PartialOverlap() {
-    console.log("\n🔍 CENÁRIO 3: Sobreposição parcial - agendamento anterior termina durante o novo");
-    
+    console.log(
+      "\n🔍 CENÁRIO 3: Sobreposição parcial - agendamento anterior termina durante o novo"
+    );
+
     try {
-      // Criar primeiro agendamento das 10:00 às 11:00
       const firstAppointment = {
         paciente: "Lucia Ferreira",
         service: "Procedimento",
@@ -240,19 +248,18 @@ class SpecificScenariosTest {
         responsible: "Dr. Paula",
         notes: "Procedimento especial",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "10:00"
+        time: "10:00",
       };
 
       const response1 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         firstAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response1.data._id);
       console.log("✅ Primeiro agendamento criado (10:00-11:00)");
 
-      // Tentar criar segundo agendamento das 10:30 às 11:30 (sobreposição)
       const secondAppointment = {
         paciente: "Carlos Oliveira",
         service: "Consulta",
@@ -260,21 +267,19 @@ class SpecificScenariosTest {
         responsible: "Dr. Roberto",
         notes: "Consulta de rotina",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "10:30" // Começa durante o primeiro agendamento
+        time: "10:30",
       };
 
       try {
-        await axios.post(
-          `${this.baseURL}/agenda`, 
-          secondAppointment,
-          { headers: this.getAuthHeaders() }
-        );
-        
+        await axios.post(`${this.baseURL}/agenda`, secondAppointment, {
+          headers: this.getAuthHeaders(),
+        });
+
         console.log("❌ ERRO: Sobreposição parcial foi aceita!");
         this.results.push({
           test: "Scenario 3: Partial Overlap",
           status: "FAIL",
-          details: "Sobreposição parcial foi aceita"
+          details: "Sobreposição parcial foi aceita",
         });
         return false;
       } catch (error) {
@@ -283,7 +288,7 @@ class SpecificScenariosTest {
           this.results.push({
             test: "Scenario 3: Partial Overlap",
             status: "PASS",
-            details: "Sobreposição detectada: " + error.response.data.error
+            details: "Sobreposição detectada: " + error.response.data.error,
           });
           return true;
         } else {
@@ -291,7 +296,7 @@ class SpecificScenariosTest {
           this.results.push({
             test: "Scenario 3: Partial Overlap",
             status: "FAIL",
-            details: "Erro inesperado: " + error.message
+            details: "Erro inesperado: " + error.message,
           });
           return false;
         }
@@ -301,7 +306,7 @@ class SpecificScenariosTest {
       this.results.push({
         test: "Scenario 3: Partial Overlap",
         status: "FAIL",
-        details: "Erro: " + error.message
+        details: "Erro: " + error.message,
       });
       return false;
     }
@@ -311,10 +316,11 @@ class SpecificScenariosTest {
    * Cenário 4: Agendamentos consecutivos válidos (deve funcionar)
    */
   async testScenario4_ValidConsecutive() {
-    console.log("\n🔍 CENÁRIO 4: Agendamentos consecutivos válidos (deve funcionar)");
-    
+    console.log(
+      "\n🔍 CENÁRIO 4: Agendamentos consecutivos válidos (deve funcionar)"
+    );
+
     try {
-      // Criar primeiro agendamento das 16:00 às 17:00
       const firstAppointment = {
         paciente: "Ana Santos",
         service: "Retorno",
@@ -322,19 +328,18 @@ class SpecificScenariosTest {
         responsible: "Dr. Maria",
         notes: "Retorno mensal",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "16:00"
+        time: "16:00",
       };
 
       const response1 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         firstAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response1.data._id);
       console.log("✅ Primeiro agendamento criado (16:00-17:00)");
 
-      // Criar segundo agendamento das 17:00 às 18:00 (consecutivo)
       const secondAppointment = {
         paciente: "João Costa",
         service: "Avaliação",
@@ -342,22 +347,22 @@ class SpecificScenariosTest {
         responsible: "Dr. Ana",
         notes: "Avaliação inicial",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "17:00" // Exatamente após o primeiro
+        time: "17:00",
       };
 
       const response2 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         secondAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response2.data._id);
       console.log("✅ Segundo agendamento consecutivo criado (17:00-18:00)");
 
       this.results.push({
         test: "Scenario 4: Valid Consecutive",
         status: "PASS",
-        details: "Agendamentos consecutivos criados com sucesso"
+        details: "Agendamentos consecutivos criados com sucesso",
       });
       return true;
     } catch (error) {
@@ -365,7 +370,7 @@ class SpecificScenariosTest {
       this.results.push({
         test: "Scenario 4: Valid Consecutive",
         status: "FAIL",
-        details: "Erro: " + error.message
+        details: "Erro: " + error.message,
       });
       return false;
     }
@@ -375,10 +380,11 @@ class SpecificScenariosTest {
    * Cenário 5: Mesmo horário em datas diferentes (deve funcionar)
    */
   async testScenario5_SameTimeDifferentDates() {
-    console.log("\n🔍 CENÁRIO 5: Mesmo horário em datas diferentes (deve funcionar)");
-    
+    console.log(
+      "\n🔍 CENÁRIO 5: Mesmo horário em datas diferentes (deve funcionar)"
+    );
+
     try {
-      // Criar primeiro agendamento
       const firstAppointment = {
         paciente: "Maria Silva",
         service: "Consulta",
@@ -386,19 +392,18 @@ class SpecificScenariosTest {
         responsible: "Dr. Teste",
         notes: "Consulta 1",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "09:00"
+        time: "09:00",
       };
 
       const response1 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         firstAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response1.data._id);
       console.log("✅ Primeiro agendamento criado (dia 1, 09:00)");
 
-      // Criar segundo agendamento no mesmo horário, mas data diferente
       const secondAppointment = {
         paciente: "João Silva",
         service: "Consulta",
@@ -406,22 +411,22 @@ class SpecificScenariosTest {
         responsible: "Dr. Teste",
         notes: "Consulta 2",
         date: moment().add(2, "day").format("YYYY-MM-DD"),
-        time: "09:00" // Mesmo horário, data diferente
+        time: "09:00",
       };
 
       const response2 = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         secondAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       this.createdAppointments.push(response2.data._id);
       console.log("✅ Segundo agendamento criado (dia 2, 09:00)");
 
       this.results.push({
         test: "Scenario 5: Same Time Different Dates",
         status: "PASS",
-        details: "Mesmo horário em datas diferentes funcionou"
+        details: "Mesmo horário em datas diferentes funcionou",
       });
       return true;
     } catch (error) {
@@ -429,7 +434,7 @@ class SpecificScenariosTest {
       this.results.push({
         test: "Scenario 5: Same Time Different Dates",
         status: "FAIL",
-        details: "Erro: " + error.message
+        details: "Erro: " + error.message,
       });
       return false;
     }
@@ -440,18 +445,19 @@ class SpecificScenariosTest {
    */
   async cleanup() {
     console.log("\n🧹 Limpando dados de teste...");
-    
+
     for (const appointmentId of this.createdAppointments) {
       try {
-        await axios.delete(
-          `${this.baseURL}/agenda/${appointmentId}`,
-          { headers: this.getAuthHeaders() }
-        );
+        await axios.delete(`${this.baseURL}/agenda/${appointmentId}`, {
+          headers: this.getAuthHeaders(),
+        });
       } catch (error) {
-        console.log(`⚠️  Não foi possível excluir agendamento ${appointmentId}: ${error.message}`);
+        console.log(
+          `⚠️  Não foi possível excluir agendamento ${appointmentId}: ${error.message}`
+        );
       }
     }
-    
+
     console.log("✅ Limpeza concluída");
   }
 
@@ -461,21 +467,18 @@ class SpecificScenariosTest {
   async runAllScenarios() {
     console.log("🚀 Iniciando testes de cenários específicos...\n");
 
-    // Autenticação
     const isAuthenticated = await this.authenticate();
     if (!isAuthenticated) {
       console.log("❌ Falha na autenticação. Abortando testes.");
       return;
     }
 
-    // Executar cenários
     await this.testScenario1_SameTimeCreation();
     await this.testScenario2_UpdateToExistingTime();
     await this.testScenario3_PartialOverlap();
     await this.testScenario4_ValidConsecutive();
     await this.testScenario5_SameTimeDifferentDates();
 
-    // Limpeza
     await this.cleanup();
 
     this.printResults();
@@ -522,4 +525,4 @@ if (require.main === module) {
   scenariosTest.runAllScenarios().catch(console.error);
 }
 
-module.exports = SpecificScenariosTest; 
+module.exports = SpecificScenariosTest;

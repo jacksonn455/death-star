@@ -13,17 +13,20 @@ O sistema de agendamento foi testado em três níveis:
 ## Funcionalidades Testadas
 
 ### ✅ Validações de Conflito
+
 - **Conflito Exato**: Mesma data e hora
 - **Sobreposição Parcial**: Agendamentos que se sobrepõem parcialmente
 - **Sobreposição Completa**: Um agendamento dentro do outro
 - **Conflito na Atualização**: Validação ao atualizar agendamentos
 
 ### ✅ Validações de Formato
+
 - **Data**: Formato YYYY-MM-DD, datas inválidas, meses/dias inexistentes
 - **Hora**: Formato HH:mm, horas/minutos inválidos, formatos incorretos
 - **Campos Obrigatórios**: Paciente, data, hora
 
 ### ✅ Cenários Válidos
+
 - **Agendamentos Consecutivos**: Horários seguidos sem sobreposição
 - **Datas Diferentes**: Mesmo horário em datas diferentes
 - **Horários Extremos**: 00:00, 23:59, horários comerciais
@@ -80,26 +83,32 @@ npm run test:all
 ### 1. Testes Básicos (`test-planner.js`)
 
 #### ✅ Criação de Agendamento Válido
+
 - Valida criação com dados corretos
 - Verifica retorno do ID do agendamento
 
 #### ✅ Prevenção de Conflito de Horário
+
 - Tenta criar agendamento no mesmo horário
 - Verifica se o erro é retornado corretamente
 
 #### ✅ Agendamentos em Horários Diferentes
+
 - Valida criação de agendamentos consecutivos
 - Testa horários matinais e noturnos
 
 #### ✅ Agendamentos em Datas Diferentes
+
 - Mesmo horário em datas diferentes
 - Verifica que não há conflito
 
 #### ✅ Validação de Dados Obrigatórios
+
 - Testa campos obrigatórios ausentes
 - Valida formatos de data e hora
 
 #### ✅ Operações CRUD
+
 - Busca de agendamentos
 - Atualização de agendamentos
 - Exclusão de agendamentos
@@ -107,98 +116,114 @@ npm run test:all
 ### 2. Testes Avançados (`test-planner-advanced.js`)
 
 #### ✅ Conflito Exato de Horário
+
 - Cria primeiro agendamento
 - Tenta criar segundo no mesmo horário
 - Verifica detecção do conflito
 
 #### ✅ Agendamentos Consecutivos
+
 - Cria múltiplos agendamentos seguidos
 - Verifica que não há conflitos
 
 #### ✅ Agendamentos em Datas Diferentes
+
 - Mesmo horário em datas distintas
 - Valida que são permitidos
 
 #### ✅ Validação de Formato de Data
+
 - Testa formatos inválidos
 - Valida datas inexistentes
 - Verifica formatos incorretos
 
 #### ✅ Validação de Formato de Hora
+
 - Testa horas inválidas (>24)
 - Valida minutos inválidos (>59)
 - Verifica formatos incorretos
 
 #### ✅ Horários Extremos
+
 - 00:00 (meia-noite)
 - 23:59 (último minuto)
 - Horários comerciais (08:00, 18:00)
 
 #### ✅ Atualização com Conflito
+
 - Atualiza agendamento para horário ocupado
 - Verifica detecção do conflito
 
 ### 3. Testes de Sobreposição (`test-planner-overlap.js`)
 
 #### ✅ Sobreposição Parcial - Anterior Termina Durante Novo
+
 - Agendamento 1: 10:00-11:00
 - Tentativa: 10:30-11:30
 - Verifica detecção da sobreposição
 
 #### ✅ Sobreposição Parcial - Novo Termina Durante Anterior
+
 - Agendamento 1: 14:00-15:00
 - Tentativa: 13:30-14:30
 - Verifica detecção da sobreposição
 
 #### ✅ Sobreposição Completa - Novo Dentro do Anterior
+
 - Agendamento 1: 16:00-17:00
 - Tentativa: 16:15-16:45
 - Verifica detecção da sobreposição
 
 #### ✅ Sobreposição Completa - Anterior Dentro do Novo
+
 - Agendamento 1: 18:00-18:30
 - Tentativa: 17:30-18:45
 - Verifica detecção da sobreposição
 
 #### ✅ Agendamentos Consecutivos Válidos
+
 - 09:00-10:00
 - 10:00-11:00
 - 11:00-12:00
 - Verifica que são permitidos
 
 #### ✅ Atualização com Sobreposição
+
 - Atualiza agendamento para causar sobreposição
 - Verifica detecção do conflito
 
 ## Melhorias Implementadas
 
 ### 🔧 Validação de Sobreposições
+
 O sistema foi melhorado para detectar sobreposições parciais, não apenas conflitos exatos:
 
 ```javascript
-// Antes: apenas conflito exato
 const existingPlanner = await Planner.findOne({ date, time });
 
-// Depois: validação de sobreposições
 const overlappingPlanners = await Planner.find(overlappingQuery);
 for (const planner of overlappingPlanners) {
-  if (appointmentStart.isBefore(existingEnd) && appointmentEnd.isAfter(existingStart)) {
+  if (
+    appointmentStart.isBefore(existingEnd) &&
+    appointmentEnd.isAfter(existingStart)
+  ) {
     throw new Error("Existe sobreposição de horários com outro agendamento.");
   }
 }
 ```
 
 ### 🔧 Validação na Atualização
+
 A função de atualização agora valida conflitos excluindo o agendamento atual:
 
 ```javascript
-// Validar conflitos excluindo o agendamento atual
 await validateExistingPlanner(data.date, data.time, id);
 ```
 
 ## Resultados Esperados
 
 ### ✅ Cenários que DEVEM Passar
+
 - Criação de agendamentos válidos
 - Agendamentos consecutivos
 - Agendamentos em datas diferentes
@@ -206,6 +231,7 @@ await validateExistingPlanner(data.date, data.time, id);
 - Validação de formatos corretos
 
 ### ❌ Cenários que DEVEM Falhar
+
 - Conflitos de horário exato
 - Sobreposições parciais
 - Dados obrigatórios ausentes
@@ -219,6 +245,7 @@ Todos os testes incluem limpeza automática dos dados criados durante os testes,
 ## Monitoramento
 
 Os testes fornecem feedback detalhado:
+
 - ✅ Testes que passaram
 - ❌ Testes que falharam
 - ⏭️ Testes que foram pulados
@@ -229,10 +256,12 @@ Os testes fornecem feedback detalhado:
 ### Problemas Comuns
 
 1. **Servidor não responde**
+
    - Verifique se o servidor está rodando na porta 8000
    - Execute `npm start` antes dos testes
 
 2. **Erro de conexão com banco**
+
    - Verifique a variável `MONGO_URI`
    - Teste a conexão com `npm run test:connection`
 
@@ -243,6 +272,7 @@ Os testes fornecem feedback detalhado:
 ### Logs Úteis
 
 Os testes geram logs detalhados que ajudam a identificar problemas:
+
 - Detalhes de cada teste executado
 - Mensagens de erro específicas
 - Estatísticas de sucesso/falha
@@ -265,4 +295,4 @@ O sistema de agendamento agora possui cobertura completa de testes que garantem:
 - ✅ Todos os cenários possíveis são validados
 - ✅ O sistema funciona corretamente em produção
 
-Execute `npm run test:planner-all` para validar todo o sistema de agendamento. 
+Execute `npm run test:planner-all` para validar todo o sistema de agendamento.

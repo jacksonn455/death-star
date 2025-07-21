@@ -1,15 +1,21 @@
 const mongoose = require("mongoose");
 
 const SaleItemSchema = new mongoose.Schema({
-  productId: {
+  itemId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
     required: true,
   },
-  productName: { type: String, required: true },
+  itemType: {
+    type: String,
+    enum: ["product", "service"],
+    required: true,
+  },
+  itemName: { type: String, required: true },
   quantity: { type: Number, required: true },
   unitPrice: { type: Number, required: true },
   totalPrice: { type: Number, required: true },
+  category: { type: String, required: false },
+  duration: { type: String, required: false },
 });
 
 const SaleSchema = new mongoose.Schema({

@@ -23,7 +23,13 @@ async function createEvent(eventData) {
 
   try {
     const startDateTime = new Date(`${eventData.date}T${eventData.time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+    
+    let endDateTime;
+    if (eventData.endDate && eventData.endTime) {
+      endDateTime = new Date(`${eventData.endDate}T${eventData.endTime}:00`);
+    } else {
+      endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+    }
 
     const event = {
       summary: eventData.service,
@@ -63,7 +69,13 @@ async function updateEventInCalendar(eventId, eventData) {
 
   try {
     const startDateTime = new Date(`${eventData.date}T${eventData.time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+    
+    let endDateTime;
+    if (eventData.endDate && eventData.endTime) {
+      endDateTime = new Date(`${eventData.endDate}T${eventData.endTime}:00`);
+    } else {
+      endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+    }
 
     const event = {
       summary: eventData.service,

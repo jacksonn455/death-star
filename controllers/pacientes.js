@@ -27,15 +27,14 @@ async function getPacienteById(req, res) {
     if (!id) {
       return res.status(400).json({ error: "ID do paciente é obrigatório" });
     }
-    
+
     validateId(String(id));
     const paciente = await getPacienteByIdService(id);
-    
+
     if (!paciente) {
       return res.status(404).json({ error: "Paciente não encontrado." });
     }
-    
-    // Retornar todos os dados do paciente incluindo anamnese completa
+
     const pacienteCompleto = {
       _id: paciente._id,
       nome: paciente.nome,
@@ -51,20 +50,16 @@ async function getPacienteById(req, res) {
       estadoCivil: paciente.estadoCivil,
       image: paciente.image,
 
-      // === PÁGINA 2: PRIMEIRA CONSULTA ===
       queixa: paciente.queixa,
       soubeDoTrabalho: paciente.soubeDoTrabalho,
 
-      // === PÁGINA 3: HISTÓRICO DA QUEIXA ===
       inicioQueixa: paciente.inicioQueixa,
       intensificacaoQueixa: paciente.intensificacaoQueixa,
       tratamentosAnteriores: paciente.tratamentosAnteriores,
       usoProdutos: paciente.usoProdutos,
 
-      // === PÁGINA 4: HISTÓRICO DE PATOLOGIAS ===
       patologias: paciente.patologias || [],
 
-      // === PÁGINA 5: CONHECENDO MAIS SOBRE VOCÊ ===
       funcionamentoIntestinal: paciente.funcionamentoIntestinal,
       gestante: paciente.gestante,
       contraceptivo: paciente.contraceptivo,
@@ -75,7 +70,6 @@ async function getPacienteById(req, res) {
       nervosismo: paciente.nervosismo,
       exercicio: paciente.exercicio,
 
-      // === PÁGINA 6: HÁBITOS E ALIMENTAÇÃO ===
       tabagista: paciente.tabagista,
       alcool: paciente.alcool,
       covid: paciente.covid,
@@ -94,7 +88,6 @@ async function getPacienteById(req, res) {
       horarioDorme: paciente.horarioDorme,
       intolerancia: paciente.intolerancia,
 
-      // === PÁGINA 7: CONDIÇÕES DA PELE ===
       melasma: paciente.melasma,
       manchas: paciente.manchas || [],
       linhas: paciente.linhas || [],
@@ -106,82 +99,65 @@ async function getPacienteById(req, res) {
       olheiras: paciente.olheiras,
       tipoOlheiras: paciente.tipoOlheiras || [],
 
-      // === PÁGINA 8: TRATAMENTO ===
       tratamento: paciente.tratamento || {},
 
-      // === PÁGINA 9: TRATAMENTO SUGERIDO ===
       tratamentoSugerido: paciente.tratamentoSugerido || {},
 
-      // === PÁGINA 10: CONTRATO E ASSINATURAS ===
       contratoAssinaturas: paciente.contratoAssinaturas || [],
 
-      // === PÁGINA 11: CONTRATO DE SERVIÇOS ESTÉTICOS ===
       contractSignatures: paciente.contractSignatures || {},
 
-      // === CAMPOS ADICIONAIS ===
       observacoes: paciente.observacoes,
       historicoFamiliar: paciente.historicoFamiliar,
       medicamentosEmUso: paciente.medicamentosEmUso || [],
       cirurgiasAnteriores: paciente.cirurgiasAnteriores || [],
       examesRecentes: paciente.examesRecentes || [],
-      
-      // Campos de contato adicional
+
       telefoneResidencial: paciente.telefoneResidencial,
       telefoneComercial: paciente.telefoneComercial,
       telefoneCelular: paciente.telefoneCelular,
-      
-      // Campos de endereço detalhado
+
       cep: paciente.cep,
       cidade: paciente.cidade,
       estado: paciente.estado,
       bairro: paciente.bairro,
       numero: paciente.numero,
       complemento: paciente.complemento,
-      
-      // Campos de responsável (para menores)
+
       responsavelNome: paciente.responsavelNome,
       responsavelCpf: paciente.responsavelCpf,
       responsavelContato: paciente.responsavelContato,
-      
-      // Campos de emergência
+
       contatoEmergencia: paciente.contatoEmergencia,
       telefoneEmergencia: paciente.telefoneEmergencia,
       parentescoEmergencia: paciente.parentescoEmergencia,
-      
-      // Campos de plano de saúde
+
       planoDeSaude: paciente.planoDeSaude,
       numeroPlano: paciente.numeroPlano,
-      
-      // Campos de trabalho
+
       empresa: paciente.empresa,
       cargo: paciente.cargo,
       tempoTrabalho: paciente.tempoTrabalho,
-      
-      // Campos de hábitos específicos
+
       usoProtetorSolar: paciente.usoProtetorSolar,
       frequenciaProtetor: paciente.frequenciaProtetor,
       tipoProtetor: paciente.tipoProtetor,
       exposicaoSolar: paciente.exposicaoSolar,
-      
-      // Campos de pele específicos
+
       tipoPele: paciente.tipoPele,
       sensibilidadePele: paciente.sensibilidadePele,
       reacoesAnteriores: paciente.reacoesAnteriores || [],
-      
-      // Campos de tratamento específicos
+
       expectativasTratamento: paciente.expectativasTratamento,
       disponibilidadeHorarios: paciente.disponibilidadeHorarios || [],
       preferenciaTratamento: paciente.preferenciaTratamento,
-      
-      // Campos de pagamento
+
       formaPagamento: paciente.formaPagamento,
       parcelamento: paciente.parcelamento,
-      
-      // Campos de acompanhamento
+
       acompanhante: paciente.acompanhante,
       observacoesEspeciais: paciente.observacoesEspeciais,
 
-      // === CAMPOS DE CONTROLE ===
       createdAt: paciente.createdAt,
       updatedAt: paciente.updatedAt,
     };
@@ -204,149 +180,246 @@ async function createPaciente(req, res) {
     image = await uploadImageToCloudinary(req.file, "pacientes");
   }
 
-  // Processar dados do formulário
   const pacienteData = { ...req.body, image };
 
-  // Debug: Log dos campos recebidos
-  console.log('🔍 Campos recebidos no createPaciente:');
-  console.log('diagnostico:', req.body.diagnostico);
-  console.log('descricao:', req.body.descricao);
-  console.log('conduta:', req.body.conduta);
-  console.log('valor:', req.body.valor);
-  console.log('data:', req.body.data);
-  console.log('assinatura:', req.body.assinatura ? 'Presente' : 'Ausente');
-  console.log('termo1:', req.body.termo1);
-  console.log('termo2:', req.body.termo2);
-  console.log('clientSignature:', req.body.clientSignature ? 'Presente' : 'Ausente');
-  console.log('providerSignature:', req.body.providerSignature ? 'Presente' : 'Ausente');
-  console.log('patologias:', req.body.patologias);
-  console.log('manchas:', req.body.manchas);
-  console.log('linhas:', req.body.linhas);
-  console.log('regiaoAcne:', req.body.regiaoAcne);
-  console.log('tipoCicatriz:', req.body.tipoCicatriz);
-  console.log('tipoOlheiras:', req.body.tipoOlheiras);
+  console.log("🔍 Campos recebidos no createPaciente:");
+  console.log("diagnostico:", req.body.diagnostico);
+  console.log("descricao:", req.body.descricao);
+  console.log("conduta:", req.body.conduta);
+  console.log("valor:", req.body.valor);
+  console.log("data:", req.body.data);
+  console.log("assinatura:", req.body.assinatura ? "Presente" : "Ausente");
+  console.log("termo1:", req.body.termo1);
+  console.log("termo2:", req.body.termo2);
+  console.log(
+    "clientSignature:",
+    req.body.clientSignature ? "Presente" : "Ausente"
+  );
+  console.log(
+    "providerSignature:",
+    req.body.providerSignature ? "Presente" : "Ausente"
+  );
+  console.log("patologias:", req.body.patologias);
+  console.log("manchas:", req.body.manchas);
+  console.log("linhas:", req.body.linhas);
+  console.log("regiaoAcne:", req.body.regiaoAcne);
+  console.log("tipoCicatriz:", req.body.tipoCicatriz);
+  console.log("tipoOlheiras:", req.body.tipoOlheiras);
 
-  // Processar campos de tratamento que vêm separados ou aninhados
-  if (req.body.diagnostico || req.body.descricao || req.body.conduta || req.body.valor || req.body.data || req.body.assinatura || req.body.termo1 !== undefined || req.body.termo2 !== undefined || req.body['tratamento[diagnostico]']) {
+  if (
+    req.body.diagnostico ||
+    req.body.descricao ||
+    req.body.conduta ||
+    req.body.valor ||
+    req.body.data ||
+    req.body.assinatura ||
+    req.body.termo1 !== undefined ||
+    req.body.termo2 !== undefined ||
+    req.body["tratamento[diagnostico]"]
+  ) {
     pacienteData.tratamento = {
-      diagnostico: req.body.diagnostico || req.body['tratamento[diagnostico]'] || "",
-      descricao: req.body.descricao || req.body['tratamento[descricao]'] || "",
-      conduta: req.body.conduta || req.body['tratamento[conduta]'] || "",
-      valor: req.body.valor || req.body['tratamento[valor]'] || "",
-      data: req.body.data || req.body['tratamento[data]'] || "",
-      assinatura: req.body.assinatura || req.body['tratamento[assinatura]'] || "",
+      diagnostico:
+        req.body.diagnostico || req.body["tratamento[diagnostico]"] || "",
+      descricao: req.body.descricao || req.body["tratamento[descricao]"] || "",
+      conduta: req.body.conduta || req.body["tratamento[conduta]"] || "",
+      valor: req.body.valor || req.body["tratamento[valor]"] || "",
+      data: req.body.data || req.body["tratamento[data]"] || "",
+      assinatura:
+        req.body.assinatura || req.body["tratamento[assinatura]"] || "",
       termosAceitos: {
-        termo1: (req.body.termo1 === 'true' || req.body.termo1 === true) || (req.body['tratamento[termosAceitos][termo1]'] === 'true' || req.body['tratamento[termosAceitos][termo1]'] === true),
-        termo2: (req.body.termo2 === 'true' || req.body.termo2 === true) || (req.body['tratamento[termosAceitos][termo2]'] === 'true' || req.body['tratamento[termosAceitos][termo2]'] === true),
+        termo1:
+          req.body.termo1 === "true" ||
+          req.body.termo1 === true ||
+          req.body["tratamento[termosAceitos][termo1]"] === "true" ||
+          req.body["tratamento[termosAceitos][termo1]"] === true,
+        termo2:
+          req.body.termo2 === "true" ||
+          req.body.termo2 === true ||
+          req.body["tratamento[termosAceitos][termo2]"] === "true" ||
+          req.body["tratamento[termosAceitos][termo2]"] === true,
       },
     };
-    console.log('✅ Tratamento processado:', pacienteData.tratamento);
+    console.log("✅ Tratamento processado:", pacienteData.tratamento);
   }
 
-  // Processar arrays que vêm como campos separados
-  if (req.body.patologias && typeof req.body.patologias === 'string') {
-    // Separar por vírgula e também por vírgula + espaço para casos como "Diabetes, Hipertensão"
-    pacienteData.patologias = req.body.patologias.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Patologias processadas:', pacienteData.patologias);
+  if (req.body.patologias && typeof req.body.patologias === "string") {
+    pacienteData.patologias = req.body.patologias
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Patologias processadas:", pacienteData.patologias);
   } else if (Array.isArray(req.body.patologias)) {
     pacienteData.patologias = req.body.patologias;
-    console.log('✅ Patologias processadas (array):', pacienteData.patologias);
+    console.log("✅ Patologias processadas (array):", pacienteData.patologias);
   }
 
-  if (req.body.manchas && typeof req.body.manchas === 'string') {
-    pacienteData.manchas = req.body.manchas.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Manchas processadas:', pacienteData.manchas);
+  if (req.body.manchas && typeof req.body.manchas === "string") {
+    pacienteData.manchas = req.body.manchas
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Manchas processadas:", pacienteData.manchas);
   } else if (Array.isArray(req.body.manchas)) {
     pacienteData.manchas = req.body.manchas;
-    console.log('✅ Manchas processadas (array):', pacienteData.manchas);
+    console.log("✅ Manchas processadas (array):", pacienteData.manchas);
   }
 
-  if (req.body.linhas && typeof req.body.linhas === 'string') {
-    pacienteData.linhas = req.body.linhas.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Linhas processadas:', pacienteData.linhas);
+  if (req.body.linhas && typeof req.body.linhas === "string") {
+    pacienteData.linhas = req.body.linhas
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Linhas processadas:", pacienteData.linhas);
   } else if (Array.isArray(req.body.linhas)) {
     pacienteData.linhas = req.body.linhas;
-    console.log('✅ Linhas processadas (array):', pacienteData.linhas);
+    console.log("✅ Linhas processadas (array):", pacienteData.linhas);
   }
 
-  if (req.body.regiaoAcne && typeof req.body.regiaoAcne === 'string') {
-    pacienteData.regiaoAcne = req.body.regiaoAcne.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Região acne processada:', pacienteData.regiaoAcne);
+  if (req.body.regiaoAcne && typeof req.body.regiaoAcne === "string") {
+    pacienteData.regiaoAcne = req.body.regiaoAcne
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Região acne processada:", pacienteData.regiaoAcne);
   } else if (Array.isArray(req.body.regiaoAcne)) {
     pacienteData.regiaoAcne = req.body.regiaoAcne;
-    console.log('✅ Região acne processada (array):', pacienteData.regiaoAcne);
+    console.log("✅ Região acne processada (array):", pacienteData.regiaoAcne);
   }
 
-  if (req.body.tipoCicatriz && typeof req.body.tipoCicatriz === 'string') {
-    pacienteData.tipoCicatriz = req.body.tipoCicatriz.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Tipo cicatriz processado:', pacienteData.tipoCicatriz);
+  if (req.body.tipoCicatriz && typeof req.body.tipoCicatriz === "string") {
+    pacienteData.tipoCicatriz = req.body.tipoCicatriz
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Tipo cicatriz processado:", pacienteData.tipoCicatriz);
   } else if (Array.isArray(req.body.tipoCicatriz)) {
     pacienteData.tipoCicatriz = req.body.tipoCicatriz;
-    console.log('✅ Tipo cicatriz processado (array):', pacienteData.tipoCicatriz);
+    console.log(
+      "✅ Tipo cicatriz processado (array):",
+      pacienteData.tipoCicatriz
+    );
   }
 
-  if (req.body.tipoOlheiras && typeof req.body.tipoOlheiras === 'string') {
-    pacienteData.tipoOlheiras = req.body.tipoOlheiras.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Tipo olheiras processado:', pacienteData.tipoOlheiras);
+  if (req.body.tipoOlheiras && typeof req.body.tipoOlheiras === "string") {
+    pacienteData.tipoOlheiras = req.body.tipoOlheiras
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Tipo olheiras processado:", pacienteData.tipoOlheiras);
   } else if (Array.isArray(req.body.tipoOlheiras)) {
     pacienteData.tipoOlheiras = req.body.tipoOlheiras;
-    console.log('✅ Tipo olheiras processado (array):', pacienteData.tipoOlheiras);
+    console.log(
+      "✅ Tipo olheiras processado (array):",
+      pacienteData.tipoOlheiras
+    );
   }
 
-  // Processar outros arrays que podem vir como strings
-  if (req.body.medicamentosEmUso && typeof req.body.medicamentosEmUso === 'string') {
-    pacienteData.medicamentosEmUso = req.body.medicamentosEmUso.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Medicamentos em uso processados:', pacienteData.medicamentosEmUso);
+  if (
+    req.body.medicamentosEmUso &&
+    typeof req.body.medicamentosEmUso === "string"
+  ) {
+    pacienteData.medicamentosEmUso = req.body.medicamentosEmUso
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log(
+      "✅ Medicamentos em uso processados:",
+      pacienteData.medicamentosEmUso
+    );
   } else if (Array.isArray(req.body.medicamentosEmUso)) {
     pacienteData.medicamentosEmUso = req.body.medicamentosEmUso;
-    console.log('✅ Medicamentos em uso processados (array):', pacienteData.medicamentosEmUso);
+    console.log(
+      "✅ Medicamentos em uso processados (array):",
+      pacienteData.medicamentosEmUso
+    );
   }
 
-  if (req.body.cirurgiasAnteriores && typeof req.body.cirurgiasAnteriores === 'string') {
-    pacienteData.cirurgiasAnteriores = req.body.cirurgiasAnteriores.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Cirurgias anteriores processadas:', pacienteData.cirurgiasAnteriores);
+  if (
+    req.body.cirurgiasAnteriores &&
+    typeof req.body.cirurgiasAnteriores === "string"
+  ) {
+    pacienteData.cirurgiasAnteriores = req.body.cirurgiasAnteriores
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log(
+      "✅ Cirurgias anteriores processadas:",
+      pacienteData.cirurgiasAnteriores
+    );
   } else if (Array.isArray(req.body.cirurgiasAnteriores)) {
     pacienteData.cirurgiasAnteriores = req.body.cirurgiasAnteriores;
-    console.log('✅ Cirurgias anteriores processadas (array):', pacienteData.cirurgiasAnteriores);
+    console.log(
+      "✅ Cirurgias anteriores processadas (array):",
+      pacienteData.cirurgiasAnteriores
+    );
   }
 
-  if (req.body.examesRecentes && typeof req.body.examesRecentes === 'string') {
-    pacienteData.examesRecentes = req.body.examesRecentes.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Exames recentes processados:', pacienteData.examesRecentes);
+  if (req.body.examesRecentes && typeof req.body.examesRecentes === "string") {
+    pacienteData.examesRecentes = req.body.examesRecentes
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log("✅ Exames recentes processados:", pacienteData.examesRecentes);
   } else if (Array.isArray(req.body.examesRecentes)) {
     pacienteData.examesRecentes = req.body.examesRecentes;
-    console.log('✅ Exames recentes processados (array):', pacienteData.examesRecentes);
+    console.log(
+      "✅ Exames recentes processados (array):",
+      pacienteData.examesRecentes
+    );
   }
 
-  if (req.body.reacoesAnteriores && typeof req.body.reacoesAnteriores === 'string') {
-    pacienteData.reacoesAnteriores = req.body.reacoesAnteriores.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Reações anteriores processadas:', pacienteData.reacoesAnteriores);
+  if (
+    req.body.reacoesAnteriores &&
+    typeof req.body.reacoesAnteriores === "string"
+  ) {
+    pacienteData.reacoesAnteriores = req.body.reacoesAnteriores
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log(
+      "✅ Reações anteriores processadas:",
+      pacienteData.reacoesAnteriores
+    );
   } else if (Array.isArray(req.body.reacoesAnteriores)) {
     pacienteData.reacoesAnteriores = req.body.reacoesAnteriores;
-    console.log('✅ Reações anteriores processadas (array):', pacienteData.reacoesAnteriores);
+    console.log(
+      "✅ Reações anteriores processadas (array):",
+      pacienteData.reacoesAnteriores
+    );
   }
 
-  if (req.body.disponibilidadeHorarios && typeof req.body.disponibilidadeHorarios === 'string') {
-    pacienteData.disponibilidadeHorarios = req.body.disponibilidadeHorarios.split(/,\s*/).map(item => item.trim()).filter(item => item);
-    console.log('✅ Disponibilidade horários processada:', pacienteData.disponibilidadeHorarios);
+  if (
+    req.body.disponibilidadeHorarios &&
+    typeof req.body.disponibilidadeHorarios === "string"
+  ) {
+    pacienteData.disponibilidadeHorarios = req.body.disponibilidadeHorarios
+      .split(/,\s*/)
+      .map((item) => item.trim())
+      .filter((item) => item);
+    console.log(
+      "✅ Disponibilidade horários processada:",
+      pacienteData.disponibilidadeHorarios
+    );
   } else if (Array.isArray(req.body.disponibilidadeHorarios)) {
     pacienteData.disponibilidadeHorarios = req.body.disponibilidadeHorarios;
-    console.log('✅ Disponibilidade horários processada (array):', pacienteData.disponibilidadeHorarios);
+    console.log(
+      "✅ Disponibilidade horários processada (array):",
+      pacienteData.disponibilidadeHorarios
+    );
   }
 
-  // Processar contratoAssinaturas que vêm como array de objetos
   if (req.body.contratoAssinaturas) {
-    // Se já é um array, manter como está
     if (Array.isArray(req.body.contratoAssinaturas)) {
       pacienteData.contratoAssinaturas = req.body.contratoAssinaturas;
     } else {
-      // Se vem como objeto com índices, converter para array
       const assinaturas = [];
-      for (let i = 0; i < 12; i++) { // Baseado no curl que mostra 12 posições
-        const contratante = req.body[`contratoAssinaturas[${i}][contratanteAssinatura]`];
-        const contratada = req.body[`contratoAssinaturas[${i}][contratadaAssinatura]`];
+      for (let i = 0; i < 12; i++) {
+        const contratante =
+          req.body[`contratoAssinaturas[${i}][contratanteAssinatura]`];
+        const contratada =
+          req.body[`contratoAssinaturas[${i}][contratadaAssinatura]`];
         const data = req.body[`contratoAssinaturas[${i}][data]`];
-        
+
         if (contratante || contratada || data) {
           assinaturas.push({
             contratanteAssinatura: contratante || "",
@@ -361,34 +434,76 @@ async function createPaciente(req, res) {
     }
   }
 
-  // Processar contractSignatures
-  if (req.body.clientSignature || req.body.providerSignature || req.body['contractSignatures[clientSignature]'] || req.body['contractSignatures[providerSignature]']) {
+  if (
+    req.body.clientSignature ||
+    req.body.providerSignature ||
+    req.body["contractSignatures[clientSignature]"] ||
+    req.body["contractSignatures[providerSignature]"]
+  ) {
     pacienteData.contractSignatures = {
-      clientSignature: req.body.clientSignature || req.body['contractSignatures[clientSignature]'] || "",
-      providerSignature: req.body.providerSignature || req.body['contractSignatures[providerSignature]'] || "",
+      clientSignature:
+        req.body.clientSignature ||
+        req.body["contractSignatures[clientSignature]"] ||
+        "",
+      providerSignature:
+        req.body.providerSignature ||
+        req.body["contractSignatures[providerSignature]"] ||
+        "",
     };
-    console.log('✅ ContractSignatures processado:', {
-      clientSignature: pacienteData.contractSignatures.clientSignature ? 'Presente' : 'Ausente',
-      providerSignature: pacienteData.contractSignatures.providerSignature ? 'Presente' : 'Ausente'
+    console.log("✅ ContractSignatures processado:", {
+      clientSignature: pacienteData.contractSignatures.clientSignature
+        ? "Presente"
+        : "Ausente",
+      providerSignature: pacienteData.contractSignatures.providerSignature
+        ? "Presente"
+        : "Ausente",
     });
   }
 
-  // Garantir que campos vazios sejam salvos como strings vazias em vez de undefined
   const camposObrigatorios = [
-    'profissao', 'cpf', 'rg', 'contato', 'endereco', 'escolaridade', 'estadoCivil',
-    'queixa', 'soubeDoTrabalho', 'inicioQueixa', 'intensificacaoQueixa', 'tratamentosAnteriores', 'usoProdutos',
-    'tabagista', 'alcool', 'covid', 'sequelas', 'alergias', 'suplementacao', 'suplementacaoDescricao',
-    'refeicoes', 'carne', 'lanches', 'refrigerante', 'frutas', 'leite', 'madrugada', 'ultimoHorario', 'horarioDorme', 'intolerancia',
-    'melasma', 'acne', 'grau', 'cicatriz', 'olheiras'
+    "profissao",
+    "cpf",
+    "rg",
+    "contato",
+    "endereco",
+    "escolaridade",
+    "estadoCivil",
+    "queixa",
+    "soubeDoTrabalho",
+    "inicioQueixa",
+    "intensificacaoQueixa",
+    "tratamentosAnteriores",
+    "usoProdutos",
+    "tabagista",
+    "alcool",
+    "covid",
+    "sequelas",
+    "alergias",
+    "suplementacao",
+    "suplementacaoDescricao",
+    "refeicoes",
+    "carne",
+    "lanches",
+    "refrigerante",
+    "frutas",
+    "leite",
+    "madrugada",
+    "ultimoHorario",
+    "horarioDorme",
+    "intolerancia",
+    "melasma",
+    "acne",
+    "grau",
+    "cicatriz",
+    "olheiras",
   ];
 
-  camposObrigatorios.forEach(campo => {
+  camposObrigatorios.forEach((campo) => {
     if (pacienteData[campo] === undefined || pacienteData[campo] === null) {
       pacienteData[campo] = "";
     }
   });
 
-  // Remover campos que foram processados para evitar duplicação
   delete pacienteData.diagnostico;
   delete pacienteData.descricao;
   delete pacienteData.conduta;
@@ -405,12 +520,19 @@ async function createPaciente(req, res) {
 async function updatePaciente(req, res) {
   const { id } = req.params;
   validateId(String(id));
-  
-  // Processar dados do formulário
+
   const updatedData = { ...req.body };
 
-  // Processar campos de tratamento que vêm separados
-  if (req.body.diagnostico || req.body.descricao || req.body.conduta || req.body.valor || req.body.data || req.body.assinatura || req.body.termo1 !== undefined || req.body.termo2 !== undefined) {
+  if (
+    req.body.diagnostico ||
+    req.body.descricao ||
+    req.body.conduta ||
+    req.body.valor ||
+    req.body.data ||
+    req.body.assinatura ||
+    req.body.termo1 !== undefined ||
+    req.body.termo2 !== undefined
+  ) {
     updatedData.tratamento = {
       diagnostico: req.body.diagnostico || "",
       descricao: req.body.descricao || "",
@@ -419,50 +541,66 @@ async function updatePaciente(req, res) {
       data: req.body.data || "",
       assinatura: req.body.assinatura || "",
       termosAceitos: {
-        termo1: req.body.termo1 === 'true' || req.body.termo1 === true,
-        termo2: req.body.termo2 === 'true' || req.body.termo2 === true,
+        termo1: req.body.termo1 === "true" || req.body.termo1 === true,
+        termo2: req.body.termo2 === "true" || req.body.termo2 === true,
       },
     };
   }
 
-  // Processar arrays que vêm como campos separados
-  if (req.body.patologias && typeof req.body.patologias === 'string') {
-    updatedData.patologias = req.body.patologias.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.patologias && typeof req.body.patologias === "string") {
+    updatedData.patologias = req.body.patologias
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  if (req.body.manchas && typeof req.body.manchas === 'string') {
-    updatedData.manchas = req.body.manchas.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.manchas && typeof req.body.manchas === "string") {
+    updatedData.manchas = req.body.manchas
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  if (req.body.linhas && typeof req.body.linhas === 'string') {
-    updatedData.linhas = req.body.linhas.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.linhas && typeof req.body.linhas === "string") {
+    updatedData.linhas = req.body.linhas
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  if (req.body.regiaoAcne && typeof req.body.regiaoAcne === 'string') {
-    updatedData.regiaoAcne = req.body.regiaoAcne.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.regiaoAcne && typeof req.body.regiaoAcne === "string") {
+    updatedData.regiaoAcne = req.body.regiaoAcne
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  if (req.body.tipoCicatriz && typeof req.body.tipoCicatriz === 'string') {
-    updatedData.tipoCicatriz = req.body.tipoCicatriz.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.tipoCicatriz && typeof req.body.tipoCicatriz === "string") {
+    updatedData.tipoCicatriz = req.body.tipoCicatriz
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  if (req.body.tipoOlheiras && typeof req.body.tipoOlheiras === 'string') {
-    updatedData.tipoOlheiras = req.body.tipoOlheiras.split(',').map(item => item.trim()).filter(item => item);
+  if (req.body.tipoOlheiras && typeof req.body.tipoOlheiras === "string") {
+    updatedData.tipoOlheiras = req.body.tipoOlheiras
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item);
   }
 
-  // Processar contratoAssinaturas que vêm como array de objetos
   if (req.body.contratoAssinaturas) {
-    // Se já é um array, manter como está
     if (Array.isArray(req.body.contratoAssinaturas)) {
       updatedData.contratoAssinaturas = req.body.contratoAssinaturas;
     } else {
-      // Se vem como objeto com índices, converter para array
       const assinaturas = [];
       for (let i = 0; i < 12; i++) {
-        const contratante = req.body[`contratoAssinaturas[${i}][contratanteAssinatura]`];
-        const contratada = req.body[`contratoAssinaturas[${i}][contratadaAssinatura]`];
+        const contratante =
+          req.body[`contratoAssinaturas[${i}][contratanteAssinatura]`];
+        const contratada =
+          req.body[`contratoAssinaturas[${i}][contratadaAssinatura]`];
         const data = req.body[`contratoAssinaturas[${i}][data]`];
-        
+
         if (contratante || contratada || data) {
           assinaturas.push({
             contratanteAssinatura: contratante || "",
@@ -477,7 +615,6 @@ async function updatePaciente(req, res) {
     }
   }
 
-  // Processar contractSignatures
   if (req.body.clientSignature || req.body.providerSignature) {
     updatedData.contractSignatures = {
       clientSignature: req.body.clientSignature || "",
@@ -485,22 +622,50 @@ async function updatePaciente(req, res) {
     };
   }
 
-  // Garantir que campos vazios sejam salvos como strings vazias em vez de undefined
   const camposObrigatorios = [
-    'profissao', 'cpf', 'rg', 'contato', 'endereco', 'escolaridade', 'estadoCivil',
-    'queixa', 'soubeDoTrabalho', 'inicioQueixa', 'intensificacaoQueixa', 'tratamentosAnteriores', 'usoProdutos',
-    'tabagista', 'alcool', 'covid', 'sequelas', 'alergias', 'suplementacao', 'suplementacaoDescricao',
-    'refeicoes', 'carne', 'lanches', 'refrigerante', 'frutas', 'leite', 'madrugada', 'ultimoHorario', 'horarioDorme', 'intolerancia',
-    'melasma', 'acne', 'grau', 'cicatriz', 'olheiras'
+    "profissao",
+    "cpf",
+    "rg",
+    "contato",
+    "endereco",
+    "escolaridade",
+    "estadoCivil",
+    "queixa",
+    "soubeDoTrabalho",
+    "inicioQueixa",
+    "intensificacaoQueixa",
+    "tratamentosAnteriores",
+    "usoProdutos",
+    "tabagista",
+    "alcool",
+    "covid",
+    "sequelas",
+    "alergias",
+    "suplementacao",
+    "suplementacaoDescricao",
+    "refeicoes",
+    "carne",
+    "lanches",
+    "refrigerante",
+    "frutas",
+    "leite",
+    "madrugada",
+    "ultimoHorario",
+    "horarioDorme",
+    "intolerancia",
+    "melasma",
+    "acne",
+    "grau",
+    "cicatriz",
+    "olheiras",
   ];
 
-  camposObrigatorios.forEach(campo => {
+  camposObrigatorios.forEach((campo) => {
     if (updatedData[campo] === undefined || updatedData[campo] === null) {
       updatedData[campo] = "";
     }
   });
 
-  // Remover campos que foram processados para evitar duplicação
   delete updatedData.diagnostico;
   delete updatedData.descricao;
   delete updatedData.conduta;
@@ -531,7 +696,7 @@ async function getAnamnese(req, res) {
   try {
     const { id } = req.params;
     validateId(String(id));
-    
+
     const anamnese = await getAnamneseService(id);
     res.status(200).json(anamnese);
   } catch (error) {
@@ -544,10 +709,10 @@ async function createAnamnese(req, res) {
   try {
     const { id } = req.params;
     validateId(String(id));
-    
+
     const anamneseData = req.body;
     const paciente = await createAnamneseService(id, anamneseData);
-    
+
     res.status(201).json(paciente);
   } catch (error) {
     console.error("Erro ao criar anamnese:", error);
@@ -559,10 +724,10 @@ async function updateAnamnese(req, res) {
   try {
     const { id } = req.params;
     validateId(String(id));
-    
+
     const anamneseData = req.body;
     const paciente = await updateAnamneseService(id, anamneseData);
-    
+
     res.status(200).json(paciente);
   } catch (error) {
     console.error("Erro ao atualizar anamnese:", error);

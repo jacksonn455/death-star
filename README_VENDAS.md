@@ -7,6 +7,7 @@ O módulo de vendas foi criado para gerenciar vendas de produtos com controle au
 ## 🚀 Funcionalidades
 
 ### ✅ Implementadas
+
 - ✅ Criar vendas com múltiplos produtos
 - ✅ Controle automático de estoque
 - ✅ Validação de estoque disponível
@@ -44,6 +45,7 @@ docs/
 O módulo já está integrado ao projeto principal. Para usar:
 
 1. **Certifique-se de que o servidor está rodando:**
+
    ```bash
    npm start
    ```
@@ -55,15 +57,15 @@ O módulo já está integrado ao projeto principal. Para usar:
 
 ## 📋 Endpoints Disponíveis
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| POST | `/vendas` | Criar nova venda |
-| GET | `/vendas` | Listar vendas com filtros |
-| GET | `/vendas/:id` | Buscar venda por ID |
-| PUT | `/vendas/:id` | Atualizar venda |
-| DELETE | `/vendas/:id` | Excluir venda |
-| GET | `/vendas/summary` | Resumo de vendas |
-| GET | `/vendas/report` | Relatório mensal |
+| Método | Endpoint          | Descrição                 |
+| ------ | ----------------- | ------------------------- |
+| POST   | `/vendas`         | Criar nova venda          |
+| GET    | `/vendas`         | Listar vendas com filtros |
+| GET    | `/vendas/:id`     | Buscar venda por ID       |
+| PUT    | `/vendas/:id`     | Atualizar venda           |
+| DELETE | `/vendas/:id`     | Excluir venda             |
+| GET    | `/vendas/summary` | Resumo de vendas          |
+| GET    | `/vendas/report`  | Relatório mensal          |
 
 ## 🛒 Como Criar uma Venda
 
@@ -76,25 +78,25 @@ const saleData = {
       productId: "64f1a2b3c4d5e6f7g8h9i0j1",
       productName: "Paracetamol 500mg",
       quantity: 2,
-      unitPrice: 5.50
-    }
+      unitPrice: 5.5,
+    },
   ],
   customerName: "João Silva",
-  paymentMethod: "dinheiro"
+  paymentMethod: "dinheiro",
 };
 
-// POST /vendas
-const response = await fetch('/vendas', {
-  method: 'POST',
+const response = await fetch("/vendas", {
+  method: "POST",
   headers: {
-    'Authorization': 'Bearer seu_token',
-    'Content-Type': 'application/json'
+    Authorization: "Bearer seu_token",
+    "Content-Type": "application/json",
   },
-  body: JSON.stringify(saleData)
+  body: JSON.stringify(saleData),
 });
 ```
 
 ### Métodos de Pagamento Disponíveis:
+
 - `dinheiro`
 - `cartao_credito`
 - `cartao_debito`
@@ -104,19 +106,20 @@ const response = await fetch('/vendas', {
 ## 📊 Relatórios
 
 ### Resumo de Vendas
+
 ```javascript
-// GET /vendas/summary
-const summary = await fetch('/vendas/summary', {
-  headers: { 'Authorization': 'Bearer seu_token' }
+const summary = await fetch("/vendas/summary", {
+  headers: { Authorization: "Bearer seu_token" },
 });
 ```
 
 **Resposta:**
+
 ```json
 {
   "today": {
     "sales": 15,
-    "revenue": 1250.50
+    "revenue": 1250.5
   },
   "month": {
     "sales": 450,
@@ -124,20 +127,21 @@ const summary = await fetch('/vendas/summary', {
   },
   "year": {
     "sales": 5400,
-    "revenue": 462000.00
+    "revenue": 462000.0
   }
 }
 ```
 
 ### Relatório Mensal
+
 ```javascript
-// GET /vendas/report?year=2024&month=1
-const report = await fetch('/vendas/report?year=2024&month=1', {
-  headers: { 'Authorization': 'Bearer seu_token' }
+const report = await fetch("/vendas/report?year=2024&month=1", {
+  headers: { Authorization: "Bearer seu_token" },
 });
 ```
 
 **Resposta:**
+
 ```json
 {
   "period": "2024-01",
@@ -152,13 +156,13 @@ const report = await fetch('/vendas/report?year=2024&month=1', {
   "topProducts": {
     "Paracetamol 500mg": {
       "quantity": 300,
-      "revenue": 1650.00
+      "revenue": 1650.0
     }
   },
   "dailySales": {
     "2024-01-15": {
       "sales": 15,
-      "revenue": 1250.50
+      "revenue": 1250.5
     }
   }
 }
@@ -167,14 +171,19 @@ const report = await fetch('/vendas/report?year=2024&month=1', {
 ## 🔍 Filtros Disponíveis
 
 ### Listar Vendas com Filtros:
+
 ```javascript
-// GET /vendas?status=concluida&paymentMethod=dinheiro&startDate=2024-01-01&endDate=2024-01-31
-const filteredSales = await fetch('/vendas?status=concluida&paymentMethod=dinheiro', {
-  headers: { 'Authorization': 'Bearer seu_token' }
-});
+endDate = 2024 - 01 - 31;
+const filteredSales = await fetch(
+  "/vendas?status=concluida&paymentMethod=dinheiro",
+  {
+    headers: { Authorization: "Bearer seu_token" },
+  }
+);
 ```
 
 **Parâmetros de Filtro:**
+
 - `status`: concluida, cancelada, pendente
 - `paymentMethod`: método de pagamento
 - `startDate`: data inicial (YYYY-MM-DD)
@@ -186,9 +195,9 @@ const filteredSales = await fetch('/vendas?status=concluida&paymentMethod=dinhei
 Para testar o módulo de vendas:
 
 1. **Configure o token de autenticação:**
+
    ```javascript
-   // Em test/test-sales.js
-   const TOKEN = 'seu_token_aqui';
+   const TOKEN = "seu_token_aqui";
    ```
 
 2. **Execute os testes:**
@@ -218,6 +227,7 @@ O sistema valida automaticamente:
 ## 🚨 Tratamento de Erros
 
 ### Erro de Estoque Insuficiente:
+
 ```json
 {
   "error": "Estoque insuficiente para Paracetamol 500mg. Disponível: 5"
@@ -225,6 +235,7 @@ O sistema valida automaticamente:
 ```
 
 ### Erro de Produto Não Encontrado:
+
 ```json
 {
   "error": "Produto com ID 64f1a2b3c4d5e6f7g8h9i0j1 não encontrado."
@@ -232,6 +243,7 @@ O sistema valida automaticamente:
 ```
 
 ### Erro de Dados Inválidos:
+
 ```json
 {
   "error": "A venda deve conter pelo menos um item."
@@ -257,7 +269,6 @@ headers: {
 ## 📝 Exemplo Completo de Uso
 
 ```javascript
-// 1. Criar uma venda
 const createSale = async () => {
   const saleData = {
     items: [
@@ -265,37 +276,35 @@ const createSale = async () => {
         productId: "64f1a2b3c4d5e6f7g8h9i0j1",
         productName: "Paracetamol 500mg",
         quantity: 2,
-        unitPrice: 5.50
-      }
+        unitPrice: 5.5,
+      },
     ],
     customerName: "João Silva",
-    paymentMethod: "dinheiro"
+    paymentMethod: "dinheiro",
   };
 
-  const response = await fetch('/vendas', {
-    method: 'POST',
+  const response = await fetch("/vendas", {
+    method: "POST",
     headers: {
-      'Authorization': 'Bearer seu_token',
-      'Content-Type': 'application/json'
+      Authorization: "Bearer seu_token",
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(saleData)
+    body: JSON.stringify(saleData),
   });
 
   return response.json();
 };
 
-// 2. Buscar resumo de vendas
 const getSalesSummary = async () => {
-  const response = await fetch('/vendas/summary', {
-    headers: { 'Authorization': 'Bearer seu_token' }
+  const response = await fetch("/vendas/summary", {
+    headers: { Authorization: "Bearer seu_token" },
   });
   return response.json();
 };
 
-// 3. Gerar relatório mensal
 const getMonthlyReport = async (year, month) => {
   const response = await fetch(`/vendas/report?year=${year}&month=${month}`, {
-    headers: { 'Authorization': 'Bearer seu_token' }
+    headers: { Authorization: "Bearer seu_token" },
   });
   return response.json();
 };
@@ -320,4 +329,4 @@ Para dúvidas ou problemas:
 
 ---
 
-**🎯 Módulo de Vendas - Pronto para Uso! 🚀** 
+**🎯 Módulo de Vendas - Pronto para Uso! 🚀**

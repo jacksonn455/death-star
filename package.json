@@ -17,8 +17,11 @@
     "test:planner": "node test/test-planner.js",
     "test:planner-advanced": "node test/test-planner-advanced.js",
     "test:planner-overlap": "node test/test-planner-overlap.js",
+    "test:planner-overlap-extended": "node test/test-overlap-extended.js",
+    "test:validation-extended": "node test/test-validation-extended.js",
     "test:planner-auth": "node test/test-planner-with-auth.js",
     "test:planner-simple": "node test/test-planner-simple.js",
+    "test:planner-extended": "node test/test-planner-extended.js",
     "test:scenarios": "node test/test-specific-scenarios.js",
     "test:refresh-token": "node test/test-refresh-token.js",
     "test:frontend-integration": "node test/test-frontend-integration.js",
@@ -30,6 +33,8 @@
     "test:all": "npm run test:newrelic && npm run test:integration",
     "test:planner-all": "npm run test:planner && npm run test:planner-advanced && npm run test:planner-overlap",
     "test:planner-auth-all": "npm run test:planner-auth",
+    "test:planner-extended-all": "npm run test:planner-extended",
+    "test:planner-extended-complete": "npm run test:planner-extended && npm run test:planner-overlap-extended && npm run test:validation-extended",
     "keep-alive": "node keep-alive.js"
   },
   "dependencies": {

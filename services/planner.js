@@ -9,8 +9,16 @@ require("dotenv").config();
 
 async function createPlannerService(data) {
   try {
-    validateRequiredFields(data, ["date", "time", "paciente"]);
-    await validateExistingPlanner(data.date, data.time);
+    validateRequiredFields(data, ["date", "time", "endTime", "paciente"]);
+    // Garantir que endDate seja sempre a mesma data
+    data.endDate = data.date;
+    await validateExistingPlanner(
+      data.date,
+      data.time,
+      null,
+      data.endDate,
+      data.endTime
+    );
     const event = await googleCalendarService.createEvent(data);
     data.eventId = event.id;
     return await Planner.create(data);
@@ -103,11 +111,19 @@ async function getPlannerByIdService(id) {
 async function updatePlannerService(id, data) {
   try {
     validateId(id);
-    validateRequiredFields(data, ["date", "time"]);
+    validateRequiredFields(data, ["date", "time", "endTime"]);
+    // Garantir que endDate seja sempre a mesma data
+    data.endDate = data.date;
     const planner = await getPlannerByIdService(id);
     validatePlanner(planner, id);
 
-    await validateExistingPlanner(data.date, data.time, id);
+    await validateExistingPlanner(
+      data.date,
+      data.time,
+      id,
+      data.endDate,
+      data.endTime
+    );
 
     await googleCalendarService.updateEventInCalendar(planner.eventId, data);
     return await Planner.findByIdAndUpdate(id, data, { new: true });
@@ -128,99 +144,52 @@ async function deletePlannerService(id) {
   }
 }
 
-async function validateExistingPlanner(date, time, excludeId = null) {
-  console.log(
-    `🔍 DEBUG: Validando agendamento - Data: ${date}, Hora: ${time}, ExcludeId: ${excludeId}`
-  );
-  console.log(
-    `🔍 DEBUG: Tipo do excludeId: ${typeof excludeId}, Valor: ${excludeId}`
-  );
-
+async function validateExistingPlanner(
+  date,
+  time,
+  excludeId = null,
+  endDate = null,
+  endTime = null
+) {
   const exactQuery = { date, time };
   if (excludeId) {
     exactQuery._id = { $ne: excludeId };
-    console.log(`🔍 DEBUG: Excluindo ID: ${excludeId} da validação`);
   }
 
-  console.log(`🔍 DEBUG: Query de conflito exato:`, exactQuery);
   const exactConflict = await Planner.findOne(exactQuery);
-  console.log(
-    `🔍 DEBUG: Conflito exato encontrado:`,
-    exactConflict ? "SIM" : "NÃO"
-  );
 
   if (exactConflict) {
-    console.log(
-      `🔍 DEBUG: Conflito exato detectado - ID: ${exactConflict._id}, Data: ${exactConflict.date}, Hora: ${exactConflict.time}`
-    );
-    console.log(
-      `🔍 DEBUG: Comparando horários - Novo: "${time}", Existente: "${exactConflict.time}"`
-    );
-    console.log(`🔍 DEBUG: São iguais? ${time === exactConflict.time}`);
     throw new Error("Já existe um agendamento para essa data e horário.");
   }
 
   const appointmentStart = moment.tz(`${date}T${time}`, "America/Sao_Paulo");
-  const appointmentEnd = appointmentStart.clone().add(1, "hour");
-
-  console.log(
-    `🔍 DEBUG: Novo agendamento - Início: ${appointmentStart.format(
-      "YYYY-MM-DD HH:mm"
-    )}, Fim: ${appointmentEnd.format("YYYY-MM-DD HH:mm")}`
-  );
+  const appointmentEnd = moment.tz(`${endDate}T${endTime}`, "America/Sao_Paulo");
 
   const sameDateQuery = { date };
   if (excludeId) {
     sameDateQuery._id = { $ne: excludeId };
   }
 
-  console.log(
-    `🔍 DEBUG: Query para agendamentos na mesma data:`,
-    sameDateQuery
-  );
   const allPlannersOnDate = await Planner.find(sameDateQuery);
-  console.log(
-    `🔍 DEBUG: Agendamentos encontrados na mesma data: ${allPlannersOnDate.length}`
-  );
 
   for (const planner of allPlannersOnDate) {
     const existingStart = moment.tz(
       `${planner.date}T${planner.time}`,
       "America/Sao_Paulo"
     );
-    const existingEnd = existingStart.clone().add(1, "hour");
-
-    console.log(
-      `🔍 DEBUG: Verificando agendamento existente - ID: ${
-        planner._id
-      }, Início: ${existingStart.format(
-        "YYYY-MM-DD HH:mm"
-      )}, Fim: ${existingEnd.format("YYYY-MM-DD HH:mm")}`
-    );
-    console.log(
-      `🔍 DEBUG: Horário existente: "${planner.time}", Novo horário: "${time}"`
+    const existingEnd = moment.tz(
+      `${planner.endDate}T${planner.endTime}`,
+      "America/Sao_Paulo"
     );
 
     const hasOverlap =
       appointmentStart.isBefore(existingEnd) &&
       appointmentEnd.isAfter(existingStart);
-    console.log(
-      `🔍 DEBUG: Sobreposição detectada: ${hasOverlap ? "SIM" : "NÃO"}`
-    );
 
     if (hasOverlap) {
-      console.log(
-        `🔍 DEBUG: Sobreposição encontrada! Novo: ${appointmentStart.format(
-          "HH:mm"
-        )}-${appointmentEnd.format("HH:mm")}, Existente: ${existingStart.format(
-          "HH:mm"
-        )}-${existingEnd.format("HH:mm")}`
-      );
       throw new Error("Existe sobreposição de horários com outro agendamento.");
     }
   }
-
-  console.log(`🔍 DEBUG: Validação concluída - Nenhum conflito encontrado`);
 }
 
 function validatePlanner(planner, id) {

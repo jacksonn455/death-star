@@ -19,22 +19,22 @@ class PlannerTestWithAuth {
   async testBasicConnectivity() {
     try {
       const response = await axios.get(`${this.baseURL}/health`);
-      
+
       this.results.push({
         test: "Basic Connectivity",
         status: "PASS",
-        details: `Server responding on ${this.baseURL}`
+        details: `Server responding on ${this.baseURL}`,
       });
-      
+
       console.log("✅ Servidor respondendo");
       return true;
     } catch (error) {
       this.results.push({
         test: "Basic Connectivity",
         status: "FAIL",
-        details: `Cannot connect to ${this.baseURL}: ${error.message}`
+        details: `Cannot connect to ${this.baseURL}: ${error.message}`,
       });
-      
+
       console.log("❌ Servidor não está respondendo");
       return false;
     }
@@ -45,23 +45,25 @@ class PlannerTestWithAuth {
    */
   async authenticate() {
     try {
-      // Dados de teste - você pode ajustar conforme necessário
       const loginData = {
         email: "admin@test.com",
-        password: "admin123"
+        password: "admin123",
       };
 
-      const response = await axios.post(`${this.baseURL}/auth/login`, loginData);
-      
+      const response = await axios.post(
+        `${this.baseURL}/auth/login`,
+        loginData
+      );
+
       if (response.status === 200 && response.data.accessToken) {
         this.accessToken = response.data.accessToken;
-        
+
         this.results.push({
           test: "Authentication",
           status: "PASS",
-          details: "Token obtido com sucesso"
+          details: "Token obtido com sucesso",
         });
-        
+
         console.log("✅ Autenticação realizada com sucesso");
         return true;
       } else {
@@ -71,9 +73,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Authentication",
         status: "FAIL",
-        details: `Erro na autenticação: ${error.message}`
+        details: `Erro na autenticação: ${error.message}`,
       });
-      
+
       console.log("❌ Falha na autenticação");
       return false;
     }
@@ -84,8 +86,8 @@ class PlannerTestWithAuth {
    */
   getAuthHeaders() {
     return {
-      'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${this.accessToken}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -101,24 +103,24 @@ class PlannerTestWithAuth {
         responsible: "Dr. Maria",
         notes: "Primeira consulta",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "14:00"
+        time: "14:00",
       };
 
       const response = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         appointmentData,
         { headers: this.getAuthHeaders() }
       );
-      
+
       if (response.status === 201 && response.data._id) {
         this.createdAppointments.push(response.data._id);
-        
+
         this.results.push({
           test: "Valid Appointment Creation",
           status: "PASS",
-          details: `Agendamento criado com ID: ${response.data._id}`
+          details: `Agendamento criado com ID: ${response.data._id}`,
         });
-        
+
         console.log("✅ Agendamento válido criado com sucesso");
         return true;
       } else {
@@ -128,9 +130,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Valid Appointment Creation",
         status: "FAIL",
-        details: `Erro ao criar agendamento válido: ${error.message}`
+        details: `Erro ao criar agendamento válido: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao criar agendamento válido");
       return false;
     }
@@ -148,22 +150,22 @@ class PlannerTestWithAuth {
         responsible: "Dr. João",
         notes: "Retorno mensal",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "14:00" // Mesmo horário do primeiro
+        time: "14:00",
       };
 
       const response = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         conflictingAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
-      // Se chegou aqui, o teste falhou porque deveria ter rejeitado
+
       this.results.push({
         test: "Time Conflict Prevention",
         status: "FAIL",
-        details: "Agendamento conflitante foi aceito quando deveria ser rejeitado"
+        details:
+          "Agendamento conflitante foi aceito quando deveria ser rejeitado",
       });
-      
+
       console.log("❌ Conflito de horário não foi detectado");
       return false;
     } catch (error) {
@@ -173,20 +175,20 @@ class PlannerTestWithAuth {
           this.results.push({
             test: "Time Conflict Prevention",
             status: "PASS",
-            details: "Conflito de horário detectado corretamente"
+            details: "Conflito de horário detectado corretamente",
           });
-          
+
           console.log("✅ Conflito de horário detectado corretamente");
           return true;
         }
       }
-      
+
       this.results.push({
         test: "Time Conflict Prevention",
         status: "FAIL",
-        details: `Erro inesperado: ${error.message}`
+        details: `Erro inesperado: ${error.message}`,
       });
-      
+
       console.log("❌ Erro inesperado no teste de conflito");
       return false;
     }
@@ -204,24 +206,24 @@ class PlannerTestWithAuth {
         responsible: "Dr. Ana",
         notes: "Avaliação inicial",
         date: moment().add(1, "day").format("YYYY-MM-DD"),
-        time: "15:00" // Horário diferente
+        time: "15:00",
       };
 
       const response = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         differentTimeAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       if (response.status === 201 && response.data._id) {
         this.createdAppointments.push(response.data._id);
-        
+
         this.results.push({
           test: "Different Time Appointment",
           status: "PASS",
-          details: `Agendamento em horário diferente criado: ${response.data.time}`
+          details: `Agendamento em horário diferente criado: ${response.data.time}`,
         });
-        
+
         console.log("✅ Agendamento em horário diferente criado com sucesso");
         return true;
       } else {
@@ -231,9 +233,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Different Time Appointment",
         status: "FAIL",
-        details: `Erro ao criar agendamento em horário diferente: ${error.message}`
+        details: `Erro ao criar agendamento em horário diferente: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao criar agendamento em horário diferente");
       return false;
     }
@@ -251,24 +253,24 @@ class PlannerTestWithAuth {
         responsible: "Dr. Carlos",
         notes: "Consulta de rotina",
         date: moment().add(2, "day").format("YYYY-MM-DD"),
-        time: "14:00" // Mesmo horário, data diferente
+        time: "14:00",
       };
 
       const response = await axios.post(
-        `${this.baseURL}/agenda`, 
+        `${this.baseURL}/agenda`,
         differentDateAppointment,
         { headers: this.getAuthHeaders() }
       );
-      
+
       if (response.status === 201 && response.data._id) {
         this.createdAppointments.push(response.data._id);
-        
+
         this.results.push({
           test: "Different Date Appointment",
           status: "PASS",
-          details: `Agendamento em data diferente criado: ${response.data.date}`
+          details: `Agendamento em data diferente criado: ${response.data.date}`,
         });
-        
+
         console.log("✅ Agendamento em data diferente criado com sucesso");
         return true;
       } else {
@@ -278,9 +280,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Different Date Appointment",
         status: "FAIL",
-        details: `Erro ao criar agendamento em data diferente: ${error.message}`
+        details: `Erro ao criar agendamento em data diferente: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao criar agendamento em data diferente");
       return false;
     }
@@ -293,40 +295,40 @@ class PlannerTestWithAuth {
     const invalidAppointments = [
       {
         name: "Missing Date",
-        data: { 
+        data: {
           paciente: "Teste",
           service: "Consulta",
           contact: "11111111111",
           responsible: "Dr. Teste",
           notes: "Teste",
-          time: "10:00"
+          time: "10:00",
         },
-        expectedError: "Data inválida"
+        expectedError: "Data inválida",
       },
       {
         name: "Missing Time",
-        data: { 
+        data: {
           paciente: "Teste",
-          service: "Consulta",
-          contact: "11111111111",
-          responsible: "Dr. Teste",
-          notes: "Teste",
-          date: moment().add(1, "day").format("YYYY-MM-DD")
-        },
-        expectedError: "Hora inválida"
-      },
-      {
-        name: "Missing Paciente",
-        data: { 
           service: "Consulta",
           contact: "11111111111",
           responsible: "Dr. Teste",
           notes: "Teste",
           date: moment().add(1, "day").format("YYYY-MM-DD"),
-          time: "10:00"
         },
-        expectedError: "Paciente é obrigatório"
-      }
+        expectedError: "Hora inválida",
+      },
+      {
+        name: "Missing Paciente",
+        data: {
+          service: "Consulta",
+          contact: "11111111111",
+          responsible: "Dr. Teste",
+          notes: "Teste",
+          date: moment().add(1, "day").format("YYYY-MM-DD"),
+          time: "10:00",
+        },
+        expectedError: "Paciente é obrigatório",
+      },
     ];
 
     let passedTests = 0;
@@ -334,37 +336,34 @@ class PlannerTestWithAuth {
 
     for (const testCase of invalidAppointments) {
       try {
-        await axios.post(
-          `${this.baseURL}/agenda`, 
-          testCase.data,
-          { headers: this.getAuthHeaders() }
-        );
-        
-        // Se chegou aqui, o teste falhou
+        await axios.post(`${this.baseURL}/agenda`, testCase.data, {
+          headers: this.getAuthHeaders(),
+        });
+
         this.results.push({
           test: `Validation: ${testCase.name}`,
           status: "FAIL",
-          details: "Dados inválidos foram aceitos"
+          details: "Dados inválidos foram aceitos",
         });
-        
+
         console.log(`❌ Validação falhou: ${testCase.name}`);
       } catch (error) {
         if (error.response && error.response.status === 400) {
           this.results.push({
             test: `Validation: ${testCase.name}`,
             status: "PASS",
-            details: `Validação correta: ${error.response.data.error}`
+            details: `Validação correta: ${error.response.data.error}`,
           });
-          
+
           console.log(`✅ Validação passou: ${testCase.name}`);
           passedTests++;
         } else {
           this.results.push({
             test: `Validation: ${testCase.name}`,
             status: "FAIL",
-            details: `Erro inesperado: ${error.message}`
+            details: `Erro inesperado: ${error.message}`,
           });
-          
+
           console.log(`❌ Erro inesperado: ${testCase.name}`);
         }
       }
@@ -378,18 +377,17 @@ class PlannerTestWithAuth {
    */
   async testGetAppointments() {
     try {
-      const response = await axios.get(
-        `${this.baseURL}/agenda`,
-        { headers: this.getAuthHeaders() }
-      );
-      
+      const response = await axios.get(`${this.baseURL}/agenda`, {
+        headers: this.getAuthHeaders(),
+      });
+
       if (response.status === 200 && response.data.data) {
         this.results.push({
           test: "Get Appointments",
           status: "PASS",
-          details: `${response.data.data.length} agendamentos encontrados`
+          details: `${response.data.data.length} agendamentos encontrados`,
         });
-        
+
         console.log("✅ Busca de agendamentos funcionando");
         return true;
       } else {
@@ -399,9 +397,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Get Appointments",
         status: "FAIL",
-        details: `Erro ao buscar agendamentos: ${error.message}`
+        details: `Erro ao buscar agendamentos: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao buscar agendamentos");
       return false;
     }
@@ -415,9 +413,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Update Appointment",
         status: "SKIP",
-        details: "Nenhum agendamento criado para atualizar"
+        details: "Nenhum agendamento criado para atualizar",
       });
-      
+
       console.log("⏭️  Teste de atualização pulado");
       return true;
     }
@@ -426,22 +424,22 @@ class PlannerTestWithAuth {
       const appointmentId = this.createdAppointments[0];
       const updateData = {
         time: "16:00",
-        notes: "Horário alterado"
+        notes: "Horário alterado",
       };
 
       const response = await axios.put(
-        `${this.baseURL}/agenda/${appointmentId}`, 
+        `${this.baseURL}/agenda/${appointmentId}`,
         updateData,
         { headers: this.getAuthHeaders() }
       );
-      
+
       if (response.status === 200 && response.data._id) {
         this.results.push({
           test: "Update Appointment",
           status: "PASS",
-          details: `Agendamento atualizado: ${response.data.time}`
+          details: `Agendamento atualizado: ${response.data.time}`,
         });
-        
+
         console.log("✅ Agendamento atualizado com sucesso");
         return true;
       } else {
@@ -451,9 +449,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Update Appointment",
         status: "FAIL",
-        details: `Erro ao atualizar agendamento: ${error.message}`
+        details: `Erro ao atualizar agendamento: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao atualizar agendamento");
       return false;
     }
@@ -467,9 +465,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Delete Appointment",
         status: "SKIP",
-        details: "Nenhum agendamento criado para excluir"
+        details: "Nenhum agendamento criado para excluir",
       });
-      
+
       console.log("⏭️  Teste de exclusão pulado");
       return true;
     }
@@ -480,14 +478,14 @@ class PlannerTestWithAuth {
         `${this.baseURL}/agenda/${appointmentId}`,
         { headers: this.getAuthHeaders() }
       );
-      
+
       if (response.status === 204) {
         this.results.push({
           test: "Delete Appointment",
           status: "PASS",
-          details: "Agendamento excluído com sucesso"
+          details: "Agendamento excluído com sucesso",
         });
-        
+
         console.log("✅ Agendamento excluído com sucesso");
         return true;
       } else {
@@ -497,9 +495,9 @@ class PlannerTestWithAuth {
       this.results.push({
         test: "Delete Appointment",
         status: "FAIL",
-        details: `Erro ao excluir agendamento: ${error.message}`
+        details: `Erro ao excluir agendamento: ${error.message}`,
       });
-      
+
       console.log("❌ Falha ao excluir agendamento");
       return false;
     }
@@ -510,18 +508,19 @@ class PlannerTestWithAuth {
    */
   async cleanup() {
     console.log("🧹 Limpando dados de teste...");
-    
+
     for (const appointmentId of this.createdAppointments) {
       try {
-        await axios.delete(
-          `${this.baseURL}/agenda/${appointmentId}`,
-          { headers: this.getAuthHeaders() }
-        );
+        await axios.delete(`${this.baseURL}/agenda/${appointmentId}`, {
+          headers: this.getAuthHeaders(),
+        });
       } catch (error) {
-        console.log(`⚠️  Não foi possível excluir agendamento ${appointmentId}: ${error.message}`);
+        console.log(
+          `⚠️  Não foi possível excluir agendamento ${appointmentId}: ${error.message}`
+        );
       }
     }
-    
+
     console.log("✅ Limpeza concluída");
   }
 
@@ -529,35 +528,32 @@ class PlannerTestWithAuth {
    * Executar todos os testes
    */
   async runAllTests() {
-    console.log("🚀 Iniciando testes do sistema de agendamento com autenticação...\n");
+    console.log(
+      "🚀 Iniciando testes do sistema de agendamento com autenticação...\n"
+    );
 
-    // Teste de conectividade
     const isConnected = await this.testBasicConnectivity();
     if (!isConnected) {
       console.log("❌ Servidor não está disponível. Abortando testes.");
       return;
     }
 
-    // Autenticação
     const isAuthenticated = await this.authenticate();
     if (!isAuthenticated) {
       console.log("❌ Falha na autenticação. Abortando testes.");
       return;
     }
 
-    // Testes de criação e validação
     await this.testValidAppointmentCreation();
     await this.testTimeConflict();
     await this.testDifferentTimeAppointment();
     await this.testDifferentDateAppointment();
     await this.testRequiredFieldsValidation();
 
-    // Testes de operações CRUD
     await this.testGetAppointments();
     await this.testUpdateAppointment();
     await this.testDeleteAppointment();
 
-    // Limpeza
     await this.cleanup();
 
     this.printResults();
@@ -579,7 +575,7 @@ class PlannerTestWithAuth {
       let icon = "❌";
       if (result.status === "PASS") icon = "✅";
       if (result.status === "SKIP") icon = "⏭️";
-      
+
       console.log(`${icon} ${result.test}: ${result.status}`);
       console.log(`   ${result.details}`);
       console.log("");
@@ -605,4 +601,4 @@ if (require.main === module) {
   plannerTest.runAllTests().catch(console.error);
 }
 
-module.exports = PlannerTestWithAuth; 
+module.exports = PlannerTestWithAuth;

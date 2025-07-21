@@ -8,6 +8,8 @@ const PlannerSchema = new mongoose.Schema({
   notes: { type: String },
   date: { type: String, required: true },
   time: { type: String, required: true },
+  endDate: { type: String, required: true },
+  endTime: { type: String, required: true },
   eventId: { type: String },
   createdAt: {
     type: Date,

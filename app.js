@@ -13,6 +13,7 @@ const dbConnect = require("./config/dbConnect.js");
 const { authMiddleware } = require("./middlewares/auth");
 const errorMiddleware = require("./middlewares/error");
 const { newRelicMiddleware } = require("./middlewares/newrelic");
+const { initializeServicesService } = require("./services/sales");
 
 const app = express();
 
@@ -55,6 +56,13 @@ const startServer = async () => {
   try {
     await dbConnect();
     console.log("✅ Banco de dados conectado!");
+
+    // Inicializar serviços
+    try {
+      await initializeServicesService();
+    } catch (error) {
+      console.error("⚠️ Erro ao inicializar serviços:", error.message);
+    }
 
     app.use((req, res, next) => {
       const timeout = 8000;
